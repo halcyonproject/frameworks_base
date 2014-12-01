@@ -20582,6 +20582,13 @@ public final class Settings {
                 "watch_ranging_available";
 
         /**
+         * Whether to wake the display when plugging or unplugging the charger
+         * @hide
+         */
+        public static final String WAKE_WHEN_PLUGGED_OR_UNPLUGGED =
+                "wake_when_plugged_or_unplugged";
+
+        /**
          * Settings migrated from Wear OS settings provider.
          * @hide
          */
