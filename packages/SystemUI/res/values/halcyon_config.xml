@@ -74,7 +74,7 @@
 
     <!-- Extra Quick Settings tiles -->
     <string name="quick_settings_tiles_extra" translatable="false">
-	caffeine,heads_up
+	caffeine,heads_up,sync
     </string>
 
 </resources>
