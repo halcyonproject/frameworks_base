@@ -20,6 +20,7 @@ import com.android.systemui.qs.QsEventLogger
 import com.android.systemui.qs.pipeline.shared.TileSpec
 import com.android.systemui.qs.shared.model.TileCategory
 import com.android.systemui.qs.tileimpl.QSTileImpl
+import com.android.systemui.qs.tiles.AmbientDisplayTile
 import com.android.systemui.qs.tiles.CaffeineTile
 import com.android.systemui.qs.tiles.HeadsUpTile
 import com.android.systemui.qs.tiles.SyncTile
@@ -36,6 +37,12 @@ import dagger.multibindings.StringKey
 
 @Module
 interface QSModule {
+    /** Inject AmbientDisplayTile into tileMap in QSModule */
+    @Binds
+    @IntoMap
+    @StringKey(AmbientDisplayTile.TILE_SPEC)
+    fun bindAmbientDisplayTile(ambientDisplayTile: AmbientDisplayTile): QSTileImpl<*>
+
     /** Inject CaffeineTile into tileMap in QSModule */
     @Binds
     @IntoMap
@@ -55,6 +62,21 @@ interface QSModule {
     fun bindSyncTile(syncTile: SyncTile): QSTileImpl<*>
 
     companion object {
+        @Provides
+        @IntoMap
+        @StringKey(AmbientDisplayTile.TILE_SPEC)
+        fun provideAmbientDisplayTileConfig(uiEventLogger: QsEventLogger): QSTileConfig {
+            return QSTileConfig(
+                tileSpec = TileSpec.create(AmbientDisplayTile.TILE_SPEC),
+                uiConfig = QSTileUIConfig.Resource(
+                    iconRes = R.drawable.ic_qs_ambient_display,
+                    labelRes = R.string.quick_settings_ambient_display_label
+                ),
+                instanceId = uiEventLogger.getNewInstanceId(),
+                category = TileCategory.DISPLAY
+            )
+        }
+
         @Provides
         @IntoMap
         @StringKey(CaffeineTile.TILE_SPEC)
