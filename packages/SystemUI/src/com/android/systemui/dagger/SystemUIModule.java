@@ -66,6 +66,7 @@ import com.android.systemui.dagger.qualifiers.Main;
 import com.android.systemui.dagger.qualifiers.SystemUser;
 import com.android.systemui.dagger.qualifiers.UiBackground;
 import com.android.systemui.demomode.dagger.DemoModeModule;
+import com.android.systemui.halcyon.QSModule;
 import com.android.systemui.deviceentry.DeviceEntryModule;
 import com.android.systemui.display.DisplayModule;
 import com.android.app.displaylib.PerDisplayRepository;
@@ -238,6 +239,7 @@ import javax.inject.Named;
         ConnectivityModule.class,
         ControlsModule.class,
         DemoModeModule.class,
+        QSModule.class,
         DeviceEntryModule.class,
         DisableFlagsModule.class,
         DisplayModule.class,
