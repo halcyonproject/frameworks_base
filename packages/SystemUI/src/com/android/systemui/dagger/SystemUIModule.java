@@ -83,6 +83,7 @@ import com.android.systemui.keyguard.data.quickaffordance.KeyguardDataQuickAffor
 import com.android.systemui.keyguard.shared.quickaffordance.KeyguardQuickAffordancesMetricsLogger;
 import com.android.systemui.keyguard.shared.quickaffordance.KeyguardQuickAffordancesMetricsLoggerImpl;
 import com.android.systemui.keyguard.ui.composable.LockscreenContent;
+import com.android.systemui.halcyon.QSModule;
 import com.android.systemui.log.dagger.LogModule;
 import com.android.systemui.log.dagger.MonitorLog;
 import com.android.systemui.log.table.TableLogBuffer;
@@ -276,6 +277,7 @@ import javax.inject.Named;
         PolicyModule.class,
         PrivacyModule.class,
         QRCodeScannerModule.class,
+        QSModule.class,
         RecordIssueModule.class,
         ReferenceModule.class,
         RetailModeModule.class,
