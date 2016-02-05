@@ -7159,6 +7159,15 @@ public class Intent implements Parcelable, Cloneable {
             "android.intent.extra.IS_RESTORE";
 
     /**
+     * Broadcast action: notify the system that the user has performed a gesture on the screen
+     * to launch the camera. Broadcast should be protected to receivers holding the
+     * {@link Manifest.permission#STATUS_BAR_SERVICE} permission.
+     * @hide
+     */
+    public static final String ACTION_SCREEN_CAMERA_GESTURE =
+            "android.intent.action.SCREEN_CAMERA_GESTURE";
+
+    /**
      * An int extra to hold a color in ARGB format (0xAARRGGBB).
      *
      * @see #ACTION_OPEN_EYE_DROPPER
