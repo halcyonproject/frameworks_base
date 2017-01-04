@@ -44,7 +44,8 @@ open class StatusBarIconHolder private constructor() {
                 // this is effectively an unused return value.
                 TYPE_BINDABLE,
                 TYPE_MOBILE_NEW,
-                TYPE_WIFI_NEW -> true
+                TYPE_WIFI_NEW,
+                TYPE_NETWORK_TRAFFIC -> true
                 else -> true
             }
         set(visible) {
@@ -96,6 +97,8 @@ open class StatusBarIconHolder private constructor() {
         /** Only applicable to [BindableIconHolder] */
         const val TYPE_BINDABLE = 5
 
+        const val TYPE_NETWORK_TRAFFIC = 6
+
         /** Returns a human-readable string representing the given type. */
         fun getTypeString(@IconType type: Int): String {
             return when (type) {
@@ -130,6 +133,13 @@ open class StatusBarIconHolder private constructor() {
             val holder = StatusBarIconHolder()
             holder.type = TYPE_MOBILE_NEW
             holder.tag = subId
+            return holder
+        }
+
+        @JvmStatic
+        fun fromNetworkTraffic(): StatusBarIconHolder {
+            val holder = StatusBarIconHolder()
+            holder.type = TYPE_NETWORK_TRAFFIC
             return holder
         }
     }
