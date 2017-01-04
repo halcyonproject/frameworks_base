@@ -126,8 +126,10 @@ public class SystemSettings {
                 Settings.System.NOTIFICATION_COOLDOWN_VIBRATE_UNLOCKED,
                 Settings.System.PREFERRED_REGION,
                 Settings.System.CV_ENABLED,
-		Settings.System.STATUS_BAR_BATTERY_STYLE,
-        	Settings.System.STATUS_BAR_SHOW_BATTERY_PERCENT
+                Settings.System.STATUS_BAR_BATTERY_STYLE,
+                Settings.System.STATUS_BAR_SHOW_BATTERY_PERCENT,
+                Settings.System.NETWORK_TRAFFIC_STATE,
+                Settings.System.NETWORK_TRAFFIC_AUTOHIDE_THRESHOLD
         ));
         if (Flags.backUpSmoothDisplayAndForcePeakRefreshRate()) {
             settings.add(Settings.System.PEAK_REFRESH_RATE);
