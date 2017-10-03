@@ -89,4 +89,9 @@
 
     <!-- Whether to cleanup fingerprints upon connection to the daemon and when user switches -->
     <bool name="config_cleanupUnusedFingerprints">true</bool>
+
+    <!-- Default values for status bar DT2S gesture -->
+    <bool name="config_dt2sGestureAvailable">false</bool>
+    <bool name="config_dt2sGestureEnabledByDefault">false</bool>
+
 </resources>
