@@ -130,4 +130,7 @@
     <!-- Name of the VoWiFi status bar icon. -->
     <string name="status_bar_vowifi">Wi-Fi calling (VoWiFi)</string>
 
+    <!-- DataSwitch Tile -->
+    <string name="qs_data_switch_label">Switch data card</string>
+
 </resources>
