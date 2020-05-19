@@ -6934,12 +6934,6 @@ public final class Settings {
         public static final String LOCKSCREEN_ENABLE_POWER_MENU = "lockscreen_enable_power_menu";
 
         /**
-         * boolean value. toggles swipe up hint in gestural nav mode
-         * @hide
-         */
-        public static final String NAVIGATION_BAR_HINT = "navigation_bar_hint";
-
-        /**
         /**
          * Wheter to show network traffic indicator in statusbar
          * @hide
@@ -13716,6 +13710,12 @@ public final class Settings {
                 ENABLED_NOTIFICATION_ASSISTANT,
                 ENABLED_NOTIFICATION_POLICY_ACCESS_PACKAGES
         };
+
+        /**
+         * boolean value. toggles swipe up hint in gestural nav mode
+         * @hide
+         */
+        public static final String NAVIGATION_BAR_HINT = "navigation_bar_hint";
 
         /**
          * How long Assistant handles have enabled in milliseconds.
