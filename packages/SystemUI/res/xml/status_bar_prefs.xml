@@ -62,6 +62,11 @@
     <!-- speakerphone -->
 
     <com.android.systemui.tuner.StatusBarSwitch
+        android:icon="@drawable/ic_statusbar_nfc"
+        android:key="nfc"
+        android:title="@string/quick_settings_nfc_label" />
+
+    <com.android.systemui.tuner.StatusBarSwitch
         android:icon="@drawable/ic_statusbar_do_not_disturb"
         android:key="zen"
         android:title="@string/quick_settings_dnd_label" />
