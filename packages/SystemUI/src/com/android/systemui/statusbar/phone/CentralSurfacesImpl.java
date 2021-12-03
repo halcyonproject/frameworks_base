@@ -141,6 +141,7 @@ import com.android.systemui.keyguard.KeyguardViewMediator;
 import com.android.systemui.keyguard.ScreenLifecycle;
 import com.android.systemui.keyguard.WakefulnessLifecycle;
 import com.android.systemui.media.NotificationMediaManager;
+import com.android.systemui.model.SysUiState;
 import com.android.systemui.navigationbar.NavigationBarController;
 import com.android.systemui.navigationbar.views.NavigationBarView;
 import com.android.systemui.notetask.NoteTaskController;
@@ -611,6 +612,8 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
 
     private final QuickAccessWalletController mWalletController;
 
+    private final SysUiState mSysUiState;
+
     /**
      * Public constructor for CentralSurfaces.
      *
@@ -726,7 +729,8 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
             EmergencyGestureIntentFactory emergencyGestureIntentFactory,
             QuickAccessWalletController walletController,
             WindowManager windowManager,
-            WindowManagerProvider windowManagerProvider
+            WindowManagerProvider windowManagerProvider,
+            SysUiState sysUiState
     ) {
         mContext = context;
         mNotificationsController = notificationsController;
@@ -826,6 +830,8 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         }
         mEmergencyGestureIntentFactory = emergencyGestureIntentFactory;
         mWalletController = walletController;
+
+        mSysUiState = sysUiState;
 
         mLockscreenShadeTransitionController = lockscreenShadeTransitionController;
         mStartingSurfaceOptional = startingSurfaceOptional;
@@ -1487,6 +1493,17 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(Intent.ACTION_SCREEN_CAMERA_GESTURE);
         mBroadcastDispatcher.registerReceiver(mBroadcastReceiver, filter, null, UserHandle.ALL);
+    }
+
+    @Override
+    public void setBlockedGesturalNavigation(boolean blocked) {
+        if (getShadeViewController() != null) {
+            getShadeViewController().setBlockedGesturalNavigation(blocked);
+            getShadeViewController().updateSystemUiStateFlags();
+        }
+        if (getNavigationBarView() != null) {
+            getNavigationBarView().setBlockedGesturalNavigation(blocked, mSysUiState);
+        }
     }
 
     protected QS createDefaultQSFragment() {

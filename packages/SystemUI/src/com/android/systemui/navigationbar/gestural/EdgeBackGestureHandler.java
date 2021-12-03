@@ -312,6 +312,8 @@ public class EdgeBackGestureHandler implements PluginListener<NavigationEdgeBack
     private final GestureNavigationSettingsObserver mGestureNavigationSettingsObserver;
     private final NotificationShadeWindowController mNotificationShadeWindowController;
 
+    private boolean mBlockedGesturalNavigation;
+
     private final NavigationEdgeBackPlugin.BackCallback mBackCallback =
             new NavigationEdgeBackPlugin.BackCallback() {
                 @Override
@@ -679,6 +681,10 @@ public class EdgeBackGestureHandler implements PluginListener<NavigationEdgeBack
                 mInputMonitorResources.put(displayId, new InputMonitorResource(displayId));
             });
         }
+    }
+
+    public void setBlockedGesturalNavigation(boolean blocked) {
+        mBlockedGesturalNavigation = blocked;
     }
 
     /**
@@ -1429,7 +1435,11 @@ public class EdgeBackGestureHandler implements PluginListener<NavigationEdgeBack
             this.mDisplayId = displayId;
             mInputMonitorCompat = new InputMonitorCompat("edge-swipe", displayId);
             mInputEventReceiver = mInputMonitorCompat.getInputReceiver(mUiThreadContext.getLooper(),
-                    mUiThreadContext.getChoreographer(), EdgeBackGestureHandler.this::onInputEvent);
+                    mUiThreadContext.getChoreographer(), event -> {
+                        if (!mBlockedGesturalNavigation) {
+                            onInputEvent(event);
+                        }
+                    });
         }
 
         public void dispose() {
