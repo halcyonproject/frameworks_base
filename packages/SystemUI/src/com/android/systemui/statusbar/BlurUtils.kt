@@ -203,7 +203,7 @@ constructor(
 
     private fun supportsBlursOnWindowsBase(): Boolean {
         return CROSS_WINDOW_BLUR_SUPPORTED &&
-            ActivityManager.isHighEndGfx() &&
+            ActivityManager.isLowRamDeviceStatic() &&
             !SystemProperties.getBoolean("persist.sysui.disableBlur", false)
     }
 
