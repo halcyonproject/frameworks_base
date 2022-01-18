@@ -19918,4 +19918,8 @@ public class ActivityManagerService extends IActivityManager.Stub
         }
         r.getWindowProcessController().setOptimizationInfo(compilerFilter, compilationReason);
     }
+
+    public boolean shouldForceCutoutFullscreen(String packageName) {
+        return mActivityTaskManager.shouldForceCutoutFullscreen(packageName);
+    }
 }
