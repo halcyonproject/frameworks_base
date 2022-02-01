@@ -142,9 +142,9 @@ constructor(
             isSnoozeEnabled = isSnoozeSettingsEnabled && !entry.isCanceled,
             isMinimized = isEntryMinimized(entry),
             redactionType =
-                if (
-                    screenshareNotificationHiding() &&
-                        sensitiveNotifProtectionController.shouldProtectNotification(entry)
+                if (entry.sbn.isContentSecure ||
+                    (screenshareNotificationHiding() &&
+                        sensitiveNotifProtectionController.shouldProtectNotification(entry))
                 ) {
                     REDACTION_TYPE_PUBLIC
                 } else {
