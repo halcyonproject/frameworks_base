@@ -276,6 +276,7 @@ public final class NotificationRecord {
 
     // Whether this notification is a real call incoming notification.
     private boolean mIsRealCallIncomingNotification = false;
+    private boolean mIsBubbleUpSuppressedByAppLock = false;
 
     public NotificationRecord(Context context, StatusBarNotification sbn,
             NotificationChannel channel) {
@@ -2135,6 +2136,14 @@ public final class NotificationRecord {
      */
     public void setIsRealCallIncomingNotification(boolean isRealCallIncomingNotification) {
         mIsRealCallIncomingNotification = isRealCallIncomingNotification;
+    }
+
+    public void setBubbleUpSuppressedByAppLock(boolean suppressed) {
+        mIsBubbleUpSuppressedByAppLock = suppressed;
+    }
+
+    public boolean isBubbleUpSuppressedByAppLock() {
+        return mIsBubbleUpSuppressedByAppLock;
     }
 
     @VisibleForTesting

@@ -298,6 +298,7 @@ import com.android.server.am.PendingIntentRecord;
 import com.android.server.am.UserState;
 import com.android.server.am.psc.ProcessRecordInternal;
 import com.android.server.am.psc.ProcessStateController;
+import com.android.server.app.AppLockManagerServiceInternal;
 import com.android.server.firewall.IntentFirewall;
 import com.android.server.grammaticalinflection.GrammaticalInflectionManagerInternal;
 import com.android.server.pm.UserManagerInternal;
@@ -880,6 +881,8 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
         int caller() default NONE;
     }
+
+    private AppLockManagerServiceInternal mAppLockManagerService = null;
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public ActivityTaskManagerService(Context context) {
@@ -6222,6 +6225,13 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
         return mWindowStyleCache.get(packageName, theme, userId);
     }
 
+    AppLockManagerServiceInternal getAppLockManagerService() {
+        if (mAppLockManagerService == null) {
+            mAppLockManagerService = LocalServices.getService(AppLockManagerServiceInternal.class);
+        }
+        return mAppLockManagerService;
+    }
+
     AppWarnings getAppWarningsLocked() {
         return mAppWarnings;
     }
@@ -8442,6 +8452,14 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
         @Override
         public int getLockTaskModeState() {
             return ActivityTaskManagerService.this.getLockTaskModeState();
+        }
+
+        @Override
+        public boolean isVisibleActivity(IBinder activityToken) {
+            synchronized (mGlobalLock) {
+                final ActivityRecord r = ActivityRecord.isInRootTaskLocked(activityToken);
+                return r != null && r.isInterestingToUserLocked();
+            }
         }
     }
 

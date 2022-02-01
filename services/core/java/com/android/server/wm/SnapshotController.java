@@ -427,6 +427,17 @@ class SnapshotController {
                                 + " not found or not visible");
                         return null;
                     }
+                    final Task rootTask = task.getRootTask();
+                    final String packageName =
+                        rootTask != null && rootTask.realActivity != null
+                            ? rootTask.realActivity.getPackageName()
+                            : null;
+                    if (packageName != null
+                            && mService.mAtmService.getAppLockManagerService() != null
+                            && mService.mAtmService.getAppLockManagerService().requireUnlock(
+                                    packageName, task.mUserId)) {
+                        return null;
+                    }
                     // Note that if updateCache is true, ActivityRecord#shouldUseAppThemeSnapshot
                     // will be used to decide whether the task is allowed to be captured because
                     // that may be retrieved by recents. While if updateCache is false, the real

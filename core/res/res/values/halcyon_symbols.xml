@@ -156,4 +156,7 @@
     <!-- Launcher restart dialog -->
     <java-symbol type="string" name="launcher_restart_title" />
     <java-symbol type="string" name="launcher_restart_message" />
+    <!-- App lock -->
+    <java-symbol type="string" name="unlock_application" />
+    <java-symbol type="array" name="config_appLockAllowedSystemApps" />
 </resources>

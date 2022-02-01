@@ -880,4 +880,6 @@ public abstract class ActivityTaskManagerInternal implements ActiveUids.Observer
 
     /** Moves all tasks from the source display to the destination display. */
     public abstract void moveAllTasks(int fromDisplayId, int toDisplayId);
+
+    public abstract boolean isVisibleActivity(IBinder activityToken);
 }

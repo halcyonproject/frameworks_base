@@ -137,4 +137,7 @@ public interface NotificationManagerInternal {
      * profile, secondary user, etc.
      */
     boolean hasZenModeConfig(UserHandle userHandle);
+
+    void updateSecureNotifications(String pkg, boolean isContentSecure,
+        boolean isBubbleUpSuppressed, int userId);
 }

@@ -149,6 +149,7 @@ import com.android.internal.widget.IWeakEscrowTokenRemovedListener;
 import com.android.internal.widget.LockPatternUtils;
 import com.android.internal.widget.LockscreenCredential;
 import com.android.internal.widget.VerifyCredentialResponse;
+import com.android.server.app.AppLockManagerServiceInternal;
 import com.android.server.LocalServices;
 import com.android.server.ServiceThread;
 import com.android.server.StorageManagerInternal;
@@ -2230,6 +2231,11 @@ public class LockSettingsService extends ILockSettings.Stub {
                 LocalServices.getService(PackageManagerInternal.class)
                         .reportLockCredentialChanged(userId);
             }
+            final AppLockManagerServiceInternal appLock =
+                    LocalServices.getService(AppLockManagerServiceInternal.class);
+            if (appLock != null) {
+                appLock.reportPasswordChanged(userId);
+            }
         }
         updatePasswordHistory(newCredential, userId);
         mContext.getSystemService(TrustManager.class).reportEnabledTrustAgentsChanged(userId);
@@ -2867,6 +2873,11 @@ public class LockSettingsService extends ILockSettings.Stub {
                         if (android.security.Flags.appLockApis()) {
                             LocalServices.getService(PackageManagerInternal.class)
                                     .reportLockCredentialChanged(userId);
+                        }
+                        final AppLockManagerServiceInternal appLock =
+                                LocalServices.getService(AppLockManagerServiceInternal.class);
+                        if (appLock != null) {
+                            appLock.reportPasswordChanged(userId);
                         }
                     }
                 });

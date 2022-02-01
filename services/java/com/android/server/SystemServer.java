@@ -508,6 +508,8 @@ public final class SystemServer implements Dumpable {
             "com.android.server.devicetodevice.DeviceToDeviceService";
     private static final String DEVICE_TO_DEVICE_APEX_SERVICE_JAR_PATH =
             "/apex/com.android.bettertogether/javalib/service-device-to-device.jar";
+    private static final String APP_LOCK_SERVICE_CLASS =
+            "com.android.server.app.AppLockManagerService$Lifecycle";
 
     private static final String PERSISTENT_DATA_BLOCK_PROP = "ro.frp.pst";
 
@@ -2862,6 +2864,10 @@ public final class SystemServer implements Dumpable {
 
             t.traceBegin("FreeformService");
             mSystemServiceManager.startService(FreeformService.class);
+            t.traceEnd();
+
+            t.traceBegin("AppLockManagerService");
+            mSystemServiceManager.startService(APP_LOCK_SERVICE_CLASS);
             t.traceEnd();
 
             if (!isWatch) {
