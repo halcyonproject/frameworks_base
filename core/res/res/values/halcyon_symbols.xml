@@ -137,4 +137,8 @@
     <!-- Defines the actions shown in advanced reboot submenu -->
     <java-symbol type="array" name="config_restartActionsList" />
 
+    <!-- App lock -->
+    <java-symbol type="string" name="unlock_application" />
+    <java-symbol type="array" name="config_appLockAllowedSystemApps" />
+
 </resources>
