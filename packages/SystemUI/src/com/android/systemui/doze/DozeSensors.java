@@ -241,6 +241,7 @@ public class DozeSensors {
                         true /* touchscreen */,
                         false /* ignoresSetting */,
                         dozeParameters.longPressUsesProx() /* requiresProx */,
+                        !dozeParameters.longPressNeedsProximityCheck() /* performsProxCheck */,
                         true /* immediatelyReRegister */,
                         false /* requiresAod */
                 ),
@@ -255,6 +256,7 @@ public class DozeSensors {
                         false /* ignoresSetting */,
                         dozeParameters.longPressUsesProx(),
                         false /* immediatelyReRegister */,
+                        !dozeParameters.longPressNeedsProximityCheck() /* performsProxCheck */,
                         !screenOffUnlockUdfps() /* requiresAod */
                 ),
                 new PluginSensor(
