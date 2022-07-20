@@ -540,6 +540,7 @@ android_library {
         "kairos",
         "displaylib",
         "aconfig_settings_flags_lib",
+        "bcsmartspace-google",
     ],
     libs: [
         "keepanno-annotations",
