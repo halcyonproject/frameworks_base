@@ -83,4 +83,8 @@
     <!-- Font family -->
     <java-symbol type="string" name="config_bodyFontFamily" />
     <java-symbol type="string" name="config_bodyFontFamilyMedium" />
+
+    <!-- Whether to cancel fingerprint operation if not idle -->
+    <java-symbol type="bool" name="config_fpCancelIfNotIdle" />
+
 </resources>
