@@ -824,6 +824,46 @@ public class ApplicationPackageManager extends PackageManager {
                 }
             };
 
+    private static final String[] featuresPixel = {
+            "com.google.android.apps.photos.PIXEL_2019_PRELOAD",
+            "com.google.android.apps.photos.PIXEL_2019_MIDYEAR_PRELOAD",
+            "com.google.android.apps.photos.PIXEL_2018_PRELOAD",
+            "com.google.android.apps.photos.PIXEL_2017_PRELOAD",
+            "com.google.android.feature.PIXEL_2021_MIDYEAR_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2020_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2020_MIDYEAR_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2019_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2019_MIDYEAR_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2018_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2017_EXPERIENCE",
+            "com.google.android.feature.PIXEL_EXPERIENCE",
+            "com.google.android.feature.GOOGLE_BUILD",
+            "com.google.android.feature.GOOGLE_EXPERIENCE"
+    };
+
+    private static final String[] featuresTensor = {
+            "com.google.android.feature.PIXEL_2026_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2026_MIDYEAR_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2025_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2025_MIDYEAR_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2024_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2024_MIDYEAR_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2023_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2023_MIDYEAR_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2022_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2022_MIDYEAR_EXPERIENCE",
+            "com.google.android.feature.PIXEL_2021_EXPERIENCE"
+    };
+
+    private static final String[] featuresNexus = {
+            "com.google.android.apps.photos.NEXUS_PRELOAD",
+            "com.google.android.apps.photos.nexus_preload",
+            "com.google.android.feature.PIXEL_EXPERIENCE",
+            "com.google.android.feature.GOOGLE_BUILD",
+            "com.google.android.feature.GOOGLE_EXPERIENCE"
+    };
+
+
     @Override
     public boolean hasSystemFeature(String name, int version) {
         // We check for system features in the following order:
@@ -842,6 +882,14 @@ public class ApplicationPackageManager extends PackageManager {
             if (maybeHasSystemFeature != null) {
                 return maybeHasSystemFeature;
             }
+        }
+
+        String packageName = ActivityThread.currentPackageName();
+        if (packageName != null
+                && packageName.equals("com.google.android.apps.photos")) {
+            if (Arrays.asList(featuresPixel).contains(name)) return false;
+            if (Arrays.asList(featuresTensor).contains(name)) return false;
+            if (Arrays.asList(featuresNexus).contains(name)) return true;
         }
         return mHasSystemFeatureCache.query(new HasSystemFeatureQuery(name, version));
     }
