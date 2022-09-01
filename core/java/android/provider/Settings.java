@@ -13541,6 +13541,21 @@ public final class Settings {
         public static final String BERRY_BLACK_THEME = "berry_black_theme";
 
         /**
+        /**
+         * User selectable PIF data.
+         * @hide
+         */
+        @Readable
+        public static final String PIF_DATA = "pif_data";
+
+        /**
+         * PIF data fetched from our repo.
+         * @hide
+         */
+        @Readable
+        public static final String FETCHED_PIF = "fetched_pif";
+
+        /**
          * Keys we no longer back up under the current schema, but want to continue to
          * process when restoring historical backup datasets.
          *
