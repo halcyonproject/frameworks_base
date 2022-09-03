@@ -16,18 +16,7 @@
 -->
 <resources>
 
-     <!-- Paths to the libraries that contain device specific key handlers -->
-     <string-array name="config_deviceKeyHandlerLibs" translatable="false">
-     </string-array>
-
-     <!-- Device keyhandlers -->
-     <java-symbol type="array" name="config_deviceKeyHandlerLibs" />
-     <java-symbol type="array" name="config_deviceKeyHandlerClasses" />
-
-     <!-- For dynamic default font styles -->
-     <java-symbol type="string" name="config_bodyFontFamily" />
-
      <!-- Cycle through ringer modes -->
-     <java-symbol type="string" name="volume_dialog_ringer_guidance_normal" />
+     <string name="volume_dialog_ringer_guidance_normal">Calls and notifications will ring</string>
 
 </resources>
