@@ -28,5 +28,7 @@
     <string name="screenrecord_longer_timeout_switch_summary">Limit recording s>
     <string name="screenrecord_skip_time_label">Skip timer</string>
     <string name="screenrecord_skip_time_summary">Remove the 3 second wait</str>
+    <string name="screenrecord_hevc_switch_label">HEVC encoding</string>
+    <string name="screenrecord_hevc_switch_summary">Use the more efficient HEVC>
 
 </resources>
