@@ -126,8 +126,6 @@ import javax.inject.Inject;
 @SysUISingleton
 public class ThemeOverlayController implements CoreStartable, Dumpable {
     protected static final String TAG = "ThemeOverlayController";
-    protected static final String OVERLAY_BERRY_BLACK_THEME =
-            "org.lineageos.overlay.customization.blacktheme";
     private static final boolean DEBUG = false;
 
     private final ThemeOverlayApplier mThemeManager;
@@ -842,10 +840,14 @@ public class ThemeOverlayController implements CoreStartable, Dumpable {
             }
         }
 
+        boolean isBlackMode = (Settings.Secure.getIntForUser(
+                mContext.getContentResolver(), Settings.Secure.BERRY_BLACK_THEME,
+                0, currentUser) == 1) && isNightMode();
+
         // Compatibility with legacy themes, where full packages were defined, instead of just
         // colors.
         if (!categoryToPackage.containsKey(OVERLAY_CATEGORY_SYSTEM_PALETTE)
-                && mNeutralOverlay != null) {
+                && mNeutralOverlay != null && !isBlackMode) {
             categoryToPackage.put(OVERLAY_CATEGORY_SYSTEM_PALETTE,
                     mNeutralOverlay.getIdentifier());
         }
@@ -856,14 +858,6 @@ public class ThemeOverlayController implements CoreStartable, Dumpable {
         if (!categoryToPackage.containsKey(OVERLAY_CATEGORY_DYNAMIC_COLOR)
                 && mDynamicOverlay != null) {
             categoryToPackage.put(OVERLAY_CATEGORY_DYNAMIC_COLOR, mDynamicOverlay.getIdentifier());
-        }
-
-        boolean isBlackMode = (Settings.Secure.getIntForUser(
-                mContext.getContentResolver(), Settings.Secure.BERRY_BLACK_THEME,
-                0, currentUser) == 1) && isNightMode();
-        if (categoryToPackage.containsKey(OVERLAY_CATEGORY_SYSTEM_PALETTE) && isBlackMode) {
-            OverlayIdentifier blackTheme = new OverlayIdentifier(OVERLAY_BERRY_BLACK_THEME);
-            categoryToPackage.put(OVERLAY_CATEGORY_SYSTEM_PALETTE, blackTheme);
         }
 
         Set<UserHandle> managedProfiles = new HashSet<>();
@@ -889,9 +883,13 @@ public class ThemeOverlayController implements CoreStartable, Dumpable {
 
         if (mNeedsOverlayCreation) {
             mNeedsOverlayCreation = false;
-            fOverlays = new FabricatedOverlay[]{
-                    mAccentOverlay, mNeutralOverlay, mDynamicOverlay
-            };
+            fOverlays = new FabricatedOverlay[isBlackMode ? 2 : 3];
+            int c = 0;
+            fOverlays[c++] = mAccentOverlay;
+            if (!isBlackMode) {
+                fOverlays[c++] = mNeutralOverlay;
+            }
+            fOverlays[c++] = mDynamicOverlay;
         }
 
         mThemeManager.applyCurrentUserOverlays(categoryToPackage, fOverlays, currentUser,
