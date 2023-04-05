@@ -15,6 +15,7 @@
  */
 package com.android.systemui.battery;
 
+import static android.provider.Settings.Global.BATTERY_ESTIMATES_LAST_UPDATE_TIME;
 import static android.provider.Settings.System.STATUS_BAR_BATTERY_STYLE;
 import static android.provider.Settings.System.STATUS_BAR_SHOW_BATTERY_PERCENT;
 
@@ -232,7 +233,7 @@ public class BatteryMeterViewController extends ViewController<BatteryMeterView>
 
     private void registerGlobalBatteryUpdateObserver() {
         mContentResolver.registerContentObserver(
-                Settings.Global.getUriFor(Settings.Global.BATTERY_ESTIMATES_LAST_UPDATE_TIME),
+                Settings.Global.getUriFor(BATTERY_ESTIMATES_LAST_UPDATE_TIME),
                 false,
                 mSettingObserver);
     }
@@ -245,14 +246,17 @@ public class BatteryMeterViewController extends ViewController<BatteryMeterView>
         @Override
         public void onChange(boolean selfChange, Uri uri) {
             super.onChange(selfChange, uri);
-            mView.updateShowPercent();
-            if (TextUtils.equals(uri.getLastPathSegment(),
-                    Settings.Global.BATTERY_ESTIMATES_LAST_UPDATE_TIME)) {
-                // update the text for sure if the estimate in the cache was updated
-                mView.updatePercentText();
-            }
-            if (TextUtils.equals(uri.getLastPathSegment(), STATUS_BAR_BATTERY_STYLE)) {
-                mView.updateBatteryStyle();
+            switch (uri.getLastPathSegment()) {
+                case BATTERY_ESTIMATES_LAST_UPDATE_TIME:
+                    // update the text for sure if the estimate in the cache was updated
+                    mView.updatePercentText();
+                    break;
+                case STATUS_BAR_SHOW_BATTERY_PERCENT:
+                    mView.updateShowPercent();
+                    break;
+                case STATUS_BAR_BATTERY_STYLE:
+                    mView.updateBatteryStyle();
+                    break;
             }
         }
     }
