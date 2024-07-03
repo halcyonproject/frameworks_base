@@ -172,7 +172,7 @@ object Flags {
     val INCOMPATIBLE_CHARGING_BATTERY_ICON = releasedFlag("incompatible_charging_battery_icon")
 
     // TODO(b/290676905): Tracking Bug
-    val NEW_SHADE_CARRIER_GROUP_MOBILE_ICONS = releasedFlag("new_shade_carrier_group_mobile_icons")
+    val NEW_SHADE_CARRIER_GROUP_MOBILE_ICONS = unreleasedFlag("new_shade_carrier_group_mobile_icons")
 
     // 800 - general visual/theme
     @JvmField val MONET = resourceBooleanFlag(R.bool.flag_monet, "monet")
