@@ -23,4 +23,7 @@
      <!-- Whether device has an alert slider. -->
      <bool name="config_hasAlertSlider">false</bool>
 
+     <!-- PowerOffAlarmService -->
+     <bool name="config_powerOffAlarmEnabled">false</bool>
+
 </resources>
