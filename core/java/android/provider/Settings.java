@@ -13653,6 +13653,13 @@ public final class Settings {
         public static final String HALCYON_SPOOFED_APPS = "halcyon_spoofed_apps";
 
         /**
+         * Control which apps to hide from other user apps.
+         * @hide
+         */
+        @Readable
+        public static final String HIDE_APPLIST = "hide_applist";
+
+        /**
          * Control whether to hide ADB and Developer settings enable status.
          * @hide
          */
