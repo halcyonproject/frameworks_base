@@ -2923,6 +2923,12 @@ public final class SystemServer implements Dumpable {
             t.traceBegin("AttestationService");
             mSystemServiceManager.startService(AttestationService.class);
             t.traceEnd();
+
+            // HideAppListService
+            t.traceBegin("StartHideAppListService");
+            mSystemServiceManager.startService(HideAppListService.class);
+            t.traceEnd();
+
         }
 
         t.traceBegin("StartMediaProjectionManager");
