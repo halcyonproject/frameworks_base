@@ -22,6 +22,7 @@ import android.app.Fragment;
 import android.database.ContentObserver;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.os.Process;
 import android.os.Trace;
 import android.os.UserHandle;
 import android.provider.Settings;
@@ -541,6 +542,11 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
             mNicBindingDisposable.dispose();
             mNicBindingDisposable = null;
         }
+    }
+
+    @Override
+    public void restartSystemUI() {
+        Process.killProcess(Process.myPid());
     }
 
     /** Initializes views related to the notification icon area. */

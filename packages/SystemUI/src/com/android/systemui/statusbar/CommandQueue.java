@@ -189,6 +189,7 @@ public class CommandQueue extends IStatusBar.Stub implements
     private static final int MSG_DISABLE_ALL  = 86 << MSG_SHIFT;
     private static final int MSG_TOGGLE_CAMERA_FLASH = 87 << MSG_SHIFT;
     private static final int MSG_SET_BLOCKED_GESTURAL_NAVIGATION = 88 << MSG_SHIFT;
+    private static final int MSG_RESTART_SYSTEMUI = 87 << MSG_SHIFT;
 
     public static final int FLAG_EXCLUDE_NONE = 0;
     public static final int FLAG_EXCLUDE_SEARCH_PANEL = 1 << 0;
@@ -600,6 +601,8 @@ public class CommandQueue extends IStatusBar.Stub implements
         default void toggleCameraFlash() {}
 
         default void setBlockedGesturalNavigation(boolean blocked) {}
+
+        default void restartSystemUI() {}
     }
 
     @VisibleForTesting
@@ -1569,6 +1572,15 @@ public class CommandQueue extends IStatusBar.Stub implements
                 mHandler.removeMessages(MSG_SET_BLOCKED_GESTURAL_NAVIGATION);
             }
             mHandler.obtainMessage(MSG_SET_BLOCKED_GESTURAL_NAVIGATION, blocked).sendToTarget();
+
+        }
+    }
+
+    @Override
+    public void restartSystemUI() {
+        synchronized (mLock) {
+            mHandler.removeMessages(MSG_RESTART_SYSTEMUI);
+            mHandler.obtainMessage(MSG_RESTART_SYSTEMUI).sendToTarget();
         }
     }
 
