@@ -19,8 +19,10 @@ package com.android.systemui.statusbar;
 import android.app.Notification;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.database.ContentObserver;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
@@ -55,10 +57,26 @@ public class OnGoingActionProgressController implements NotificationListener.Not
 
     private final NotificationListener mNotificationListener;
 
+    private final ContentObserver mProgressChipObserver =
+            new ContentObserver(new android.os.Handler()) {
+                @Override
+                public void onChange(boolean selfChange) {
+                    updateViews(); // Refresh chip visibility when setting changes
+                }
+            };
+
     private static int getThemeColor(Context context, int attrResId) {
         TypedValue typedValue = new TypedValue();
         context.getTheme().resolveAttribute(attrResId, typedValue, true);
         return typedValue.data;
+    }
+
+    private boolean isProgressChipEnabled() {
+        return Settings.Global.getInt(
+                mContext.getContentResolver(),
+                Settings.Global.SHOW_PROGRESS_BAR_CHIP,
+                1
+        ) == 1;
     }
 
     /**
@@ -82,6 +100,12 @@ public class OnGoingActionProgressController implements NotificationListener.Not
         mIconView = progressGroup.iconView;
         mIconFetcher = new IconFetcher(context);
         mNotificationListener.addNotificationHandler(this);
+
+        mContext.getContentResolver().registerContentObserver(
+            Settings.Global.getUriFor(Settings.Global.SHOW_PROGRESS_BAR_CHIP),
+            false,
+            mProgressChipObserver
+        );
     }
 
     /** Checks whether notification has progress */
@@ -143,11 +167,9 @@ public class OnGoingActionProgressController implements NotificationListener.Not
 
     /** Updates progress views @AsyncUnsafe */
     private void updateViews() {
-        if (!mIsTrackingProgress) {
+        if (!mIsTrackingProgress || !isProgressChipEnabled()) {
             mProgressRootView.setVisibility(View.GONE);
         } else {
-            // TODO: make it a bit faster by checking wether mIsTrackingProgress has changed between
-            // calls
             mProgressRootView.setVisibility(View.VISIBLE);
             if (mCurrentProgressMax == 0) {
                 Log.w(TAG, "updateViews: max progress is 0. Guessing it as 100");

@@ -20032,6 +20032,13 @@ public final class Settings {
         public static final String WINDOW_IGNORE_SECURE = "window_ignore_secure";
 
         /**
+         * Control whether to spoof current status of storage encryption.
+         * @hide
+         */
+        @Readable
+        public static final String SHOW_PROGRESS_BAR_CHIP = "show_progress_bar_chip";
+
+        /**
          * Setting indicating whether Low Power Standby is enabled, if supported.
          *
          * Values are:
