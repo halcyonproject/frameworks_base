@@ -361,4 +361,6 @@ public interface CentralSurfaces extends Dumpable, LifecycleOwner, CoreStartable
     void setBlockedGesturalNavigation(boolean blocked);
 
     GameSpaceManager getGameSpaceManager();
+
+    default void unlockedScreenOffAnimationCancel() {}
 }
