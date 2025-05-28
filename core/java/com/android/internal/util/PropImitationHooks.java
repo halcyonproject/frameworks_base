@@ -33,6 +33,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.android.internal.R;
+import com.android.internal.util.halcyon.KeyProviderManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
