@@ -125,9 +125,6 @@ public class DevicePropsSpoofing {
             "sunfish"
     };
 
-    private static volatile boolean sIsGms = false;
-    private static volatile boolean sIsFinsky = false;
-
     static {
         propsToKeep = new HashMap<>();
         propsToKeep.put("com.google.android.settings.intelligence", new ArrayList<>(Collections.singletonList("FINGERPRINT")));
@@ -163,10 +160,6 @@ public class DevicePropsSpoofing {
         propsToChangePixelXL.put("FINGERPRINT", "google/marlin/marlin:10/QP1A.191005.007.A3/5972272:user/release-keys");
     }
 
-    private static boolean isSpoofingDisabled() {
-        return SystemProperties.getBoolean("persist.sys.dps.disable", false);
-    }
-
     private static boolean isGoogleCameraPackage(String packageName) {
         return packageName.startsWith("com.google.android.GoogleCamera") ||
                 Arrays.asList(customGoogleCameraPackages).contains(packageName);
@@ -190,31 +183,7 @@ public class DevicePropsSpoofing {
         return "";
     }
 
-    private static void spoofBuildGms() {
-        if (isSpoofingDisabled()) {
-            Log.i(TAG, "DPS is disabled. Skipping GMS Build Spoof");
-            return;
-        }
-        if (sCertifiedProps == null || sCertifiedProps.length == 0) return;
-        // Alter model name and fingerprint to avoid hardware attestation enforcement
-        setPropValue("PRODUCT", sCertifiedProps[0].isEmpty() ? getDeviceName(sCertifiedProps[4]) : sCertifiedProps[0]);
-        setPropValue("DEVICE", sCertifiedProps[1].isEmpty() ? getDeviceName(sCertifiedProps[4]) : sCertifiedProps[1]);
-        setPropValue("MANUFACTURER", sCertifiedProps[2]);
-        setPropValue("BRAND", sCertifiedProps[3]);
-        setPropValue("MODEL", sCertifiedProps[4]);
-        setPropValue("FINGERPRINT", sCertifiedProps[5]);
-        if (!sCertifiedProps[6].isEmpty()) {
-            setVersionFieldString("SECURITY_PATCH", sCertifiedProps[6]);
-        }
-        setPropValue("ID", sCertifiedProps[7].isEmpty() ? getBuildID(sCertifiedProps[4]) : sCertifiedProps[7]);
-    }
-
     public static void setProps(Context context) {
-        if (isSpoofingDisabled()) {
-            Log.i(TAG, "DPS is disabled. Skipping Props Spoof");
-            return;
-        }
-
         final String packageName = context.getPackageName();
 
         propsToChangeGeneric.forEach((k, v) -> setPropValue(k, v));
@@ -233,8 +202,6 @@ public class DevicePropsSpoofing {
             return;
         }
 
-        sCertifiedProps = res.getStringArray(R.array.config_certifiedBuildProperties);
-
         if (packageName.startsWith("com.google.")
                 || packageName.startsWith("com.samsung.")
                 || Arrays.asList(packagesToChangePixel8Pro).contains(packageName)
@@ -245,9 +212,6 @@ public class DevicePropsSpoofing {
                 propsToChange.putAll(propsToChangePixelXL);
             } else if (Arrays.asList(packagesToKeep).contains(packageName) ||
                        isGoogleCameraPackage(packageName) || isPixelDevice) {
-                return;
-            } else if (packageName.equals("com.android.vending")) {
-                sIsFinsky = true;
                 return;
             } else {
                 if (Arrays.asList(packagesToChangePixel8Pro).contains(packageName)) {
@@ -268,16 +232,6 @@ public class DevicePropsSpoofing {
                 if (DEBUG) Log.d(TAG, "Defining " + key + " prop for: " + packageName);
                 setPropValue(key, value);
             }
-            if (packageName.equals("com.google.android.gms")) {
-                setPropValue("TIME", System.currentTimeMillis());
-                final String processName = Application.getProcessName();
-                if (processName.toLowerCase().contains("unstable")
-                    || processName.toLowerCase().contains("instrumentation")) {
-                    sIsGms = true;
-                    spoofBuildGms();
-                }
-                return;
-            }
             // Set proper indexing fingerprint
             if (packageName.equals("com.google.android.settings.intelligence")) {
                 setPropValue("FINGERPRINT", Build.VERSION.INCREMENTAL);
@@ -294,43 +248,6 @@ public class DevicePropsSpoofing {
             field.setAccessible(false);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             Log.e(TAG, "Failed to set prop " + key, e);
-        }
-    }
-
-    private static void setVersionField(String key, Object value) {
-        try {
-            if (DEBUG) Log.d(TAG, "Defining prop " + key + " to " + value.toString());
-            Field field = Build.VERSION.class.getDeclaredField(key);
-            field.setAccessible(true);
-            field.set(null, value);
-            field.setAccessible(false);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            Log.e(TAG, "Failed to set prop " + key, e);
-        }
-    }
-
-    private static void setVersionFieldString(String key, String value) {
-        try {
-            if (DEBUG) Log.d(TAG, "Defining prop " + key + " to " + value);
-            Field field = Build.VERSION.class.getDeclaredField(key);
-            field.setAccessible(true);
-            field.set(null, value);
-            field.setAccessible(false);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            Log.e(TAG, "Failed to set prop " + key, e);
-        }
-    }
-
-    private static boolean isCallerSafetyNet() {
-        return sIsGms && Arrays.stream(Thread.currentThread().getStackTrace())
-                .anyMatch(elem -> elem.getClassName().contains("DroidGuard"));
-    }
-
-    public static void onEngineGetCertificateChain() {
-        // Check stack for SafetyNet or Play Integrity
-        if (isCallerSafetyNet() || sIsFinsky) {
-            Log.i(TAG, "Blocked key attestation sIsGms=" + sIsGms + " sIsFinsky=" + sIsFinsky);
-            throw new UnsupportedOperationException();
         }
     }
 }

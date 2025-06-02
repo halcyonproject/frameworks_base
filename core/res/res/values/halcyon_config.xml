@@ -1,20 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-
-    <!-- Build properties from a GMS certified device -->
-    <string-array name="config_certifiedBuildProperties" translatable="false">
-      <!--
-        <item>Build.PRODUCT</item>
-        <item>Build.DEVICE</item>
-        <item>Build.MANUFACTURER</item>
-        <item>Build.BRAND</item>
-        <item>Build.MODEL</item>
-        <item>Build.FINGERPRINT</item>
-        <item>Build.SECURITY_PATCH</item>
-        <item>Build.ID</item>
-      -->
-    </string-array>
-    
         <!-- All the capabilities of the LEDs on this device, stored as a bit field.
          This integer should equal the sum of the corresponding value for each
          of the following capabilities present:
