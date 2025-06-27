@@ -18,6 +18,7 @@
 
 package com.android.systemui.qs.panels.ui.compose.infinitegrid
 
+import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -108,6 +109,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -142,6 +144,7 @@ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.TileArrangementPadding
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.TileHeight
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.ToggleTargetSize
+import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.LargeTileIconSize
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.EditModeTileDefaults.AUTO_SCROLL_DISTANCE
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.EditModeTileDefaults.AUTO_SCROLL_SPEED
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.EditModeTileDefaults.AvailableTilesGridMinHeight
@@ -167,7 +170,6 @@ import com.android.systemui.qs.pipeline.shared.TileSpec
 import com.android.systemui.qs.shared.model.TileCategory
 import com.android.systemui.qs.shared.model.groupAndSort
 import com.android.systemui.res.R
-import com.android.systemui.text.CompatText
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
@@ -186,7 +188,7 @@ private fun EditModeTopBar(onStopEditing: () -> Unit, onReset: (() -> Unit)?) {
                 titleContentColor = MaterialTheme.colorScheme.onSurface,
             ),
         title = {
-            CompatText(
+            Text(
                 text = stringResource(id = R.string.qs_edit_tiles),
                 style = MaterialTheme.typography.titleLargeEmphasized,
                 modifier = Modifier.padding(start = 24.dp),
@@ -215,7 +217,7 @@ private fun EditModeTopBar(onStopEditing: () -> Unit, onReset: (() -> Unit)?) {
                             contentColor = MaterialTheme.colorScheme.onPrimary,
                         ),
                 ) {
-                    CompatText(
+                    Text(
                         text = stringResource(id = com.android.internal.R.string.reset),
                         style = MaterialTheme.typography.labelLarge,
                     )
@@ -467,10 +469,10 @@ private fun CurrentTilesGridHeader(
                     }
                 }
                 EditModeHeaderState.Place -> {
-                    EditGridCenteredCompatText(text = stringResource(id = R.string.tap_to_position_tile))
+                    EditGridCenteredText(text = stringResource(id = R.string.tap_to_position_tile))
                 }
                 EditModeHeaderState.Idle -> {
-                    EditGridCenteredCompatText(
+                    EditGridCenteredText(
                         text = stringResource(id = R.string.drag_to_rearrange_tiles)
                     )
                 }
@@ -490,8 +492,8 @@ private fun EditGridHeader(
 }
 
 @Composable
-private fun EditGridCenteredCompatText(text: String, modifier: Modifier = Modifier) {
-    CompatText(text = text, style = MaterialTheme.typography.titleSmall, modifier = modifier)
+private fun EditGridCenteredText(text: String, modifier: Modifier = Modifier) {
+    Text(text = text, style = MaterialTheme.typography.titleSmall, modifier = modifier)
 }
 
 @Composable
@@ -506,7 +508,7 @@ private fun RemoveTileTarget(onClick: () -> Unit) {
                 .padding(10.dp),
     ) {
         Icon(imageVector = Icons.Default.Clear, contentDescription = null)
-        CompatText(text = stringResource(id = R.string.qs_customize_remove))
+        Text(text = stringResource(id = R.string.qs_customize_remove))
     }
 }
 
@@ -524,7 +526,7 @@ private fun CurrentTilesGrid(
     val totalRows = listState.tiles.lastOrNull()?.row ?: 0
     val totalHeight by
         animateDpAsState(
-            gridHeight(totalRows + 1, TileHeight, TileArrangementPadding, CurrentTilesGridPadding),
+            gridHeight(totalRows + 1, LocalContext.current.TileHeight, TileArrangementPadding, CurrentTilesGridPadding),
             label = "QSEditCurrentTilesGridHeight",
         )
     val gridState = rememberLazyGridState()
@@ -800,7 +802,7 @@ private fun TileGridCell(
         tileState = tileState,
         resizingState = resizingState,
         modifier =
-            modifier.height(TileHeight).fillMaxWidth().onSizeChanged {
+            modifier.height(LocalContext.current.TileHeight).fillMaxWidth().onSizeChanged {
                 // Calculate the min/max width from the idle size
                 val min = if (cell.isIcon) it.width else (it.width - totalPadding) / largeTilesSpan
                 val max = if (cell.isIcon) (it.width * largeTilesSpan) + totalPadding else it.width
@@ -871,7 +873,7 @@ private fun CategoryHeader(category: TileCategory, modifier: Modifier = Modifier
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurface,
         )
-        CompatText(
+        Text(
             text = category.label.load() ?: "",
             style = MaterialTheme.typography.titleMediumEmphasized,
             color = MaterialTheme.colorScheme.onSurface,
@@ -905,7 +907,7 @@ private fun AvailableTileGridCell(
                     stateDescription?.let { this.stateDescription = it }
                 },
     ) {
-        Box(Modifier.fillMaxWidth().height(TileHeight)) {
+        Box(Modifier.fillMaxWidth().height(LocalContext.current.TileHeight)) {
             val draggableModifier =
                 if (cell.isAvailable) {
                     Modifier.dragAndDropTileSource(
@@ -939,7 +941,7 @@ private fun AvailableTileGridCell(
             }
         }
         Box(Modifier.fillMaxSize()) {
-            CompatText(
+            Text(
                 cell.tile.label.text,
                 maxLines = 2,
                 color = colors.label,
@@ -955,7 +957,7 @@ private fun AvailableTileGridCell(
 @Composable
 private fun SpacerGridCell(modifier: Modifier = Modifier) {
     // By default, spacers are invisible and exist purely to catch drag movements
-    Box(modifier.height(TileHeight).fillMaxWidth())
+    Box(modifier.height(LocalContext.current.TileHeight).fillMaxWidth())
 }
 
 @Composable
@@ -966,7 +968,8 @@ fun EditTile(
     progress: () -> Float,
     colors: TileColors = EditModeTileDefaults.editTileColors(),
 ) {
-    val iconSizeDiff = CommonTileDefaults.IconSize - CommonTileDefaults.LargeTileIconSize
+    val context = LocalContext.current
+    val iconSizeDiff = context.LargeTileIconSize - context.LargeTileIconSize
     val alpha by animateFloatAsState(if (tileState == TileState.GreyedOut) .4f else 1f)
     Row(
         horizontalArrangement = spacedBy(6.dp),
@@ -986,12 +989,12 @@ fun EditTile(
                     val startPadding =
                         if (currentProgress == 0f) {
                             // Find the center of the max width when the tile is icon only
-                            iconHorizontalCenter(constraints.maxWidth)
+                            iconHorizontalCenter(context, constraints.maxWidth)
                         } else {
                             // Find the center of the minimum width to hold the same position as the
                             // tile is resized.
                             val basePadding =
-                                min?.let { iconHorizontalCenter(it.roundToInt()) } ?: 0f
+                                min?.let { iconHorizontalCenter(context, it.roundToInt()) } ?: 0f
                             // Large tiles, represented with a progress of 1f, have a 0.dp padding
                             basePadding * (1f - currentProgress)
                         }
@@ -1004,12 +1007,11 @@ fun EditTile(
                 .graphicsLayer { this.alpha = alpha },
     ) {
         // Icon
-        Box(Modifier.size(ToggleTargetSize)) {
+        Box(Modifier.size(LocalContext.current.ToggleTargetSize)) {
             SmallTileContent(
                 iconProvider = { tile.icon },
                 color = colors.icon,
                 animateToEnd = true,
-                size = { CommonTileDefaults.IconSize - iconSizeDiff * progress() },
                 modifier = Modifier.align(Alignment.Center),
             )
         }
@@ -1033,8 +1035,8 @@ private fun toAvailableTiles(
     } + otherTiles.fastMap { AvailableTileGridCell(it.tile) }
 }
 
-private fun MeasureScope.iconHorizontalCenter(containerSize: Int): Float {
-    return (containerSize - ToggleTargetSize.roundToPx()) / 2f -
+private fun MeasureScope.iconHorizontalCenter(context: Context, containerSize: Int): Float {
+    return (containerSize - context.ToggleTargetSize.roundToPx()) / 2f -
         CommonTileDefaults.TileStartPadding.toPx()
 }
 
