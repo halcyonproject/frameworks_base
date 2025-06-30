@@ -26,6 +26,7 @@ import com.android.systemui.qs.panels.domain.model.EditTilesModel
 import com.android.systemui.qs.panels.shared.model.EditTileData
 import com.android.systemui.qs.shared.model.TileCategory
 import com.android.systemui.qs.tiles.base.shared.model.QSTileConfigProvider
+import com.android.systemui.res.R
 import javax.inject.Inject
 
 @SysUISingleton
@@ -36,39 +37,53 @@ constructor(
     private val qsTileConfigProvider: QSTileConfigProvider,
     private val iconAndNameCustomRepository: IconAndNameCustomRepository,
 ) {
+
+    private val customTileMap: Map<String, CustomTileConfig> = mapOf(
+        "sync" to CustomTileConfig(R.drawable.ic_qs_sync, TileCategory.CONNECTIVITY),
+        "nfc" to CustomTileConfig(R.drawable.ic_qs_nfc, TileCategory.CONNECTIVITY),
+        "aod" to CustomTileConfig(R.drawable.ic_qs_aod, TileCategory.UTILITIES),
+        "caffeine" to CustomTileConfig(R.drawable.ic_qs_caffeine, TileCategory.UTILITIES),
+        "heads_up" to CustomTileConfig(R.drawable.ic_qs_heads_up, TileCategory.DISPLAY),
+    )
+
+    private data class CustomTileConfig(
+        val iconRes: Int,
+        val category: TileCategory
+    )
+
     /**
      * Provides a list of the tiles to edit, with their UI information (icon, labels).
      *
      * The icons have the label as their content description.
      */
     suspend fun getTilesToEdit(): EditTilesModel {
-        val stockTiles =
-            stockTilesRepository.stockTiles.map {
-                if (qsTileConfigProvider.hasConfig(it.spec)) {
-                    val config = qsTileConfigProvider.getConfig(it.spec)
-                    EditTileData(
-                        it,
-                        Icon.Resource(
-                            config.uiConfig.iconRes,
-                            ContentDescription.Resource(config.uiConfig.labelRes),
-                        ),
-                        Text.Resource(config.uiConfig.labelRes),
-                        null,
-                        category = config.category,
-                    )
-                } else {
-                    EditTileData(
-                        it,
-                        Icon.Resource(
-                            android.R.drawable.star_on,
-                            ContentDescription.Loaded(it.spec),
-                        ),
-                        Text.Loaded(it.spec),
-                        null,
-                        category = TileCategory.UNKNOWN,
-                    )
-                }
+        val stockTiles = stockTilesRepository.stockTiles.map { tile ->
+            if (qsTileConfigProvider.hasConfig(tile.spec)) {
+                val config = qsTileConfigProvider.getConfig(tile.spec)
+                EditTileData(
+                    tile,
+                    Icon.Resource(
+                        config.uiConfig.iconRes,
+                        ContentDescription.Resource(config.uiConfig.labelRes),
+                    ),
+                    Text.Resource(config.uiConfig.labelRes),
+                    null,
+                    category = config.category,
+                )
+            } else {
+                val fallback = customTileMap[tile.spec]
+                val iconRes = fallback?.iconRes ?: android.R.drawable.star_on
+                val category = fallback?.category ?: TileCategory.UNKNOWN
+
+                EditTileData(
+                    tile,
+                    Icon.Resource(iconRes, ContentDescription.Loaded(tile.spec)),
+                    Text.Loaded(tile.spec),
+                    null,
+                    category,
+                )
             }
+        }
         return EditTilesModel(stockTiles, iconAndNameCustomRepository.getCustomTileData())
     }
 }
