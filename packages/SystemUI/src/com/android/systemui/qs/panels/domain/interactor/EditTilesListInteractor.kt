@@ -39,11 +39,14 @@ constructor(
 ) {
 
     private val customTileMap: Map<String, CustomTileConfig> = mapOf(
+        "cell" to CustomTileConfig(R.drawable.ic_swap_vert, TileCategory.CONNECTIVITY),
+        "wifi" to CustomTileConfig(R.drawable.ic_qs_category_connectivty, TileCategory.CONNECTIVITY),
         "sync" to CustomTileConfig(R.drawable.ic_qs_sync, TileCategory.CONNECTIVITY),
         "nfc" to CustomTileConfig(R.drawable.ic_qs_nfc, TileCategory.CONNECTIVITY),
         "aod" to CustomTileConfig(R.drawable.ic_qs_aod, TileCategory.UTILITIES),
         "caffeine" to CustomTileConfig(R.drawable.ic_qs_caffeine, TileCategory.UTILITIES),
         "heads_up" to CustomTileConfig(R.drawable.ic_qs_heads_up, TileCategory.DISPLAY),
+        "ambient_display" to CustomTileConfig(R.drawable.ic_qs_ambient_display, TileCategory.DISPLAY),
     )
 
     private data class CustomTileConfig(
