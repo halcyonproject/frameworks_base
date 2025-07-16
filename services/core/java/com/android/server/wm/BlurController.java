@@ -145,6 +145,6 @@ final class BlurController {
 
     private boolean getBlurDisabledSetting() {
         return Settings.Global.getInt(mContext.getContentResolver(),
-                Settings.Global.DISABLE_WINDOW_BLURS, 0) == 1;
+                Settings.Global.DISABLE_WINDOW_BLURS, 1) == 0;
     }
 }
