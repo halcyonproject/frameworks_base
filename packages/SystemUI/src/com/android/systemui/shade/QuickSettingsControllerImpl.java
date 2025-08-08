@@ -37,6 +37,10 @@ import android.content.res.Resources;
 import android.graphics.Insets;
 import android.graphics.Rect;
 import android.graphics.Region;
+import android.os.Handler;
+import android.os.UserHandle;
+import android.provider.Settings;
+import android.service.notification.StatusBarNotification;
 import android.util.IndentingPrintWriter;
 import android.util.Log;
 import android.util.MathUtils;
@@ -230,6 +234,7 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
     private int mPanelTopMargin;
     private int mExpandedMediaHeight;
     private int mQQsMinHeight;
+    private int mQQSBrightnessSliderHeight;
     /**
      * Determines if QS should be already expanded when expanding shade.
      * Used for split shade, two finger gesture as well as accessibility shortcut to QS.
@@ -282,6 +287,8 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
     private long mNotificationBoundsAnimationDelay;
     /** The duration of the notification bounds animation. */
     private long mNotificationBoundsAnimationDuration;
+
+    private boolean mQQSBrightnessEnabled = true;
 
     private final Region mInterceptRegion = new Region();
     /** The end bounds of a clipping animation. */
@@ -393,6 +400,7 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
         mJavaAdapter = javaAdapter;
 
         mLockscreenShadeTransitionController.addCallback(new LockscreenShadeTransitionCallback());
+
         dumpManager.registerDumpable(this);
 
         mWindowManagerProvider = windowManagerProvider;
@@ -462,6 +470,10 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
         mQQsMinHeight =
                 mResources.getDimensionPixelSize(
                         R.dimen.qqs_min_height);
+
+        mQQSBrightnessSliderHeight =
+                mResources.getDimensionPixelSize(
+                        R.dimen.qs_brightness_slider_height);
 
         mEnableClipping = mResources.getBoolean(R.bool.qs_enable_clipping);
         updateGestureInsetsCache();
@@ -2206,11 +2218,12 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
                     if (QSComposeFragment.isEnabled() && mPreviouslyVisibleMedia && !visible) {
                         updateHeightsOnShadeLayoutChange();
                         mPanelViewControllerLazy.get().positionClockAndNotifications();
+                        int minQQSHeight = mQQsMinHeight - (mQQSBrightnessEnabled ? 0 : mQQSBrightnessSliderHeight);
                         // the current calculation is not reliable at all, there were times 
                         // that it is still including the media height which causes the stack scroller to not react
                         // to the top padding changes
                         int calculatedTopPadding = mPanelTopMargin + getHeaderHeight() - mExpandedMediaHeight;
-                        int topPadding = Math.max(calculatedTopPadding, mQQsMinHeight);
+                        int topPadding = Math.max(calculatedTopPadding, minQQSHeight);
                         // update notif shade intractor
                         mPanelViewControllerLazy.get().requestScrollerTopPaddingUpdate();
                         // do not wait for pending top padding changes. force update the notif stack srolllayout
