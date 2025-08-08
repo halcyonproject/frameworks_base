@@ -249,8 +249,8 @@ public class PropImitationHooks {
          * Set Stock Fingerprint for ARCore
          * Set custom model for Netflix
          */
-        if (sIsGms) {
-            setCertifiedPropsForGms(context);
+        if (sIsGms || sIsFinsky) {
+            setPlayIntegrityProps(context);
         } else if (!sStockFp.isEmpty() && packageName.equals(PACKAGE_ARCORE)) {
             dlog("Setting stock fingerprint for: " + packageName);
             setPropValue("FINGERPRINT", sStockFp);
@@ -314,7 +314,7 @@ public class PropImitationHooks {
         }
     }
 
-    private static void setCertifiedPropsForGms(Context context) {
+    private static void setPlayIntegrityProps(Context context) {
         String savedProps = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.PIF_DATA);
         if (savedProps == null || TextUtils.isEmpty(savedProps)) {
             savedProps = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.FETCHED_PIF);
@@ -359,10 +359,10 @@ public class PropImitationHooks {
         };
 
         if (!was) {
-            dlog("Spoofing build for GMS");
+            dlog("Spoofing build for GMS / Finsky");
             setCertifiedProps();
         } else {
-            dlog("Skip spoofing build for GMS, because GmsAddAccountActivityOnTop");
+            dlog("Skip spoofing build for GMS / Finsky, because GmsAddAccountActivityOnTop");
         }
 
         try {
