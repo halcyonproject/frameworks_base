@@ -64,6 +64,12 @@ public class PropImitationHooks {
     private static final ComponentName GMS_ADD_ACCOUNT_ACTIVITY = ComponentName.unflattenFromString(
             "com.google.android.gms/.auth.uiflows.minutemaid.MinuteMaidActivity");
 
+    private static final Set<String> finskyProps = Set.of(
+        "FINGERPRINT",
+        "SECURITY_PATCH",
+        "DEVICE_INITIAL_SDK_INT"
+    );
+
     private static final Map<String, Object> propsToChangePixelXL;
     private static final Map<String, Object> propsToChangeROG6;
     private static final Map<String, Object> propsToChangeS24U;
@@ -380,6 +386,7 @@ public class PropImitationHooks {
                 Log.e(TAG, "Invalid entry in certified props: " + entry);
                 continue;
             }
+            if (sIsFinsky && !finskyProps.contains(fieldAndProp[0])) continue;
             setPropValue(fieldAndProp[0], fieldAndProp[1]);
         }
     }
