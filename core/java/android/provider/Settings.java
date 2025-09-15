@@ -7911,6 +7911,13 @@ public final class Settings {
         }
 
         /**
+         * A comma-separated list of package names that should be allowed 
+         * to extend into the display cutout area.
+         * @hide
+         */
+        public static final String NOTCH_ENABLED_APPS = "notch_enabled_apps";
+
+        /**
          * Control whether to enable adaptive sleep mode.
          * @hide
          */
