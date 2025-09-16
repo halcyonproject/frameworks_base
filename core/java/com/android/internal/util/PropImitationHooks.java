@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -428,21 +429,22 @@ public class PropImitationHooks {
         }
     }
 
-    private static boolean isCallerSafetyNet() {
-        return sIsGms && Arrays.stream(Thread.currentThread().getStackTrace())
-                .anyMatch(elem -> elem.getClassName().contains("DroidGuard"));
+    private static boolean isCallerPlayIntegrity() {
+        return Arrays.stream(Thread.currentThread().getStackTrace())
+                .map(StackTraceElement::getClassName)
+                .anyMatch(name -> name.toLowerCase(Locale.US).contains("droidguard"));
     }
 
     public static void onEngineGetCertificateChain() {
         // If a keybox is found, don't block key attestation
-        if (KeyProviderManager.isKeyboxAvailable()) {
+        /*if (KeyProviderManager.isKeyboxAvailable()) {
             dlog("Key attestation blocking is disabled because a keybox is defined to spoof");
             return;
-        }
+        }*/
 
-        // Check stack for SafetyNet or Play Integrity
-        if (isCallerSafetyNet() || sIsFinsky) {
-            dlog("Blocked key attestation sIsGms=" + sIsGms + " sIsFinsky=" + sIsFinsky);
+        // Check stack for Play Integrity
+        if (isCallerPlayIntegrity()) {
+            dlog("Blocked key attestation for play integrity");
             throw new UnsupportedOperationException();
         }
     }
