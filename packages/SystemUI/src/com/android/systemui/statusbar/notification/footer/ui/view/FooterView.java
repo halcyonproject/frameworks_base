@@ -422,6 +422,10 @@ public class FooterView extends StackScrollerDecorView {
             mHistoryButton.setBackground(historyBg);
             mSettingsButton.setCompoundDrawableTintList(ColorStateList.valueOf(onSurface));
             mHistoryButton.setCompoundDrawableTintList(ColorStateList.valueOf(onSurface));
+            
+            setBackgroundAlpha(mSettingsButton);
+            setBackgroundAlpha(mHistoryButton);
+            setBackgroundAlpha(mClearAllButton);
         } else {
             mManageOrHistoryButton.setBackground(settingsBg);
             mManageOrHistoryButton.setTextColor(onSurface);
@@ -433,6 +437,16 @@ public class FooterView extends StackScrollerDecorView {
             colorUpdateLogger.logEvent("Footer.updateColors()",
                     "textColor(onSurface)=" + hexColorString(onSurface)
                             + " background=" + DrawableDumpKt.dumpToString(settingsBg));
+        }
+    }
+
+    private void setBackgroundAlpha(View button) {
+        Drawable bg = button.getBackground();
+        if (bg != null) {
+            bg = bg.mutate();
+            float alpha = android.os.SystemProperties.getInt("persist.sys.qs_secondary_alpha", 50) / 100f;
+            bg.setAlpha(mIsBlurSupported ? (int)(alpha * 255) : 255);
+            button.setBackground(bg);
         }
     }
 
