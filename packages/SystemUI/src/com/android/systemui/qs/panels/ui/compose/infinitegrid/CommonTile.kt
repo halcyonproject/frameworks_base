@@ -202,29 +202,33 @@ fun LargeTileLabels(
     isVisible: () -> Boolean = { true },
     accessibilityUiState: AccessibilityUiState? = null,
 ) {
-    val animatedLabelColor by animateColorAsState(colors.label, label = "QSTileLabelColor")
-    val animatedSecondaryLabelColor by
-        animateColorAsState(colors.secondaryLabel, label = "QSTileSecondaryLabelColor")
-    Column(verticalArrangement = Arrangement.Center, modifier = modifier.fillMaxHeight()) {
+    val animatedLabelColor by animateColorAsState(colors.label)
+    val animatedSecondaryLabelColor by animateColorAsState(colors.secondaryLabel)
+
+    Column(
+        verticalArrangement = Arrangement.Center,
+        modifier = modifier.fillMaxHeight()
+    ) {
+        // Title
         TileLabel(
             text = label,
-            style = MaterialTheme.typography.titleSmallEmphasized,
+            style = MaterialTheme.typography.titleSmallEmphasized.copy(fontSize = 14.sp),
             color = { animatedLabelColor },
             isVisible = isVisible,
         )
+
+        // Summary
         if (!TextUtils.isEmpty(secondaryLabel)) {
             TileLabel(
-                secondaryLabel ?: "",
+                text = secondaryLabel ?: "",
+                style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp),
                 color = { animatedSecondaryLabelColor },
-                style = MaterialTheme.typography.labelMedium,
                 isVisible = isVisible,
                 modifier =
                     Modifier.thenIf(
                         accessibilityUiState?.stateDescription?.contains(secondaryLabel ?: "") ==
                             true
-                    ) {
-                        Modifier.clearAndSetSemantics {}
-                    },
+                    ) { Modifier.clearAndSetSemantics {} },
             )
         }
     }
@@ -323,7 +327,7 @@ private fun TileLabel(
         text = text,
         style = style.copy(
             color = color(),
-            fontSize = 16.sp,
+            fontSize = 12.sp,
             fontFamily = fontFamily,
         ),
         maxLines = 1,
