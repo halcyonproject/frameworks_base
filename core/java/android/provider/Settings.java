@@ -13192,6 +13192,13 @@ public final class Settings {
         public static final String HIDE_DEVELOPER_STATUS = "hide_developer_status";
 
         /**
+         * Control whether to hide ADB and Developer settings enable status.
+         * @hide
+         */
+        @Readable
+        public static final String HALCYON_SPOOFED_APPS = "halcyon_spoofed_apps";
+
+        /**
          * Our GameSpace can't write to device_config directly [GTS]
          * Use this as intermediate to pass device_config property
          * from our GameSpace to com.android.server.app.GameManagerService

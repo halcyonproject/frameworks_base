@@ -2,6 +2,7 @@
  * Copyright (C) 2022-2024 Paranoid Android
  *           (C) 2023 ArrowOS
  *           (C) 2023 The LibreMobileOS Foundation
+ *           (C) 2021-2025 Halcyon Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +35,7 @@ import android.util.Log;
 
 import com.android.internal.R;
 import com.android.internal.util.halcyon.KeyProviderManager;
-
+import com.android.internal.util.halcyon.UserSelectedSpoofUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -266,26 +267,40 @@ public class PropImitationHooks {
 
         Map<String, Object> propsToChange = new HashMap<>();
 
-        if (packagesToChangePixelXL.contains(packageName)) {
-            propsToChange.putAll(propsToChangePixelXL);
-        } else if (packagesToChangeROG6.contains(packageName)) {
-            propsToChange.putAll(propsToChangeROG6);
-        } else if (packagesToChangeS24U.contains(packageName)) {
-            propsToChange.putAll(propsToChangeS24U);
-        } else if (packagesToChangeLenovoY700.contains(packageName)) {
-            propsToChange.putAll(propsToChangeLenovoY700);
-        } else if (packagesToChangeOP8P.contains(packageName)) {
-            propsToChange.putAll(propsToChangeOP8P);
-        } else if (packagesToChangeOP9P.contains(packageName)) {
-            propsToChange.putAll(propsToChangeOP9P);
-        } else if (packagesToChangeMI11TP.contains(packageName)) {
-            propsToChange.putAll(propsToChangeMI11TP);
-        } else if (packagesToChangeMI13P.contains(packageName)) {
-            propsToChange.putAll(propsToChangeMI13P);
-        } else if (packagesToChangeF5.contains(packageName)) {
-            propsToChange.putAll(propsToChangeF5);
-        } else if (packagesToChangeBS4.contains(packageName)) {
-            propsToChange.putAll(propsToChangeBS4);
+        if (UserSelectedSpoofUtils.shouldSpoofApp(context, packageName)) {
+            String profile = UserSelectedSpoofUtils.getSpoofProfile(context, packageName);
+            switch (profile) {
+                case "PixelXL":
+                    propsToChange.putAll(propsToChangePixelXL);
+                    break;
+                case "ROG6":
+                    propsToChange.putAll(propsToChangeROG6);
+                    break;
+                case "S24U":
+                    propsToChange.putAll(propsToChangeS24U);
+                    break;
+                case "LenovoY700":
+                    propsToChange.putAll(propsToChangeLenovoY700);
+                    break;
+                case "OP8P":
+                    propsToChange.putAll(propsToChangeOP8P);
+                    break;
+                case "OP9P":
+                    propsToChange.putAll(propsToChangeOP9P);
+                    break;
+                case "MI11TP":
+                    propsToChange.putAll(propsToChangeMI11TP);
+                    break;
+                case "MI13P":
+                    propsToChange.putAll(propsToChangeMI13P);
+                    break;
+                case "F5":
+                    propsToChange.putAll(propsToChangeF5);
+                    break;
+                case "BS4":
+                    propsToChange.putAll(propsToChangeBS4);
+                    break;
+            }
         }
 
         dlog("Defining props for: " + packageName);
