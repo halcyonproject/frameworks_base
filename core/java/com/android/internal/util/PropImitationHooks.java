@@ -2,6 +2,7 @@
  * Copyright (C) 2022-2024 Paranoid Android
  *           (C) 2023 ArrowOS
  *           (C) 2023 The LibreMobileOS Foundation
+ *           (C) 2021-2025 Halcyon Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +37,7 @@ import android.util.Log;
 
 import com.android.internal.R;
 import com.android.internal.util.halcyon.KeyProviderManager;
-
+import com.android.internal.util.halcyon.UserSelectedSpoofUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -47,6 +48,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -88,6 +90,67 @@ public class PropImitationHooks {
         "BRAND", "google",
         "MODEL", "Pixel",
         "FINGERPRINT", "google/sailfish/sailfish:10/QP1A.191005.007.A3/5972272:user/release-keys"
+    );
+
+    private static final Map<String, Object> propsToChangePixelXL = Map.of(
+        "BRAND", "google",
+        "MANUFACTURER", "Google",
+        "DEVICE", "marlin",
+        "PRODUCT", "marlin",
+        "HARDWARE", "marlin",
+        "MODEL", "Pixel XL",
+        "ID", "QP1A.191005.007.A3",
+        "FINGERPRINT", "google/marlin/marlin:10/QP1A.191005.007.A3/5972272:user/release-keys"
+    );
+
+    private static final Map<String, Object> propsToChangeROG6 = Map.of(
+        "BRAND", "asus",
+        "MANUFACTURER", "asus",
+        "DEVICE", "AI2201",
+        "MODEL", "ASUS_AI2201"
+    );
+
+    private static final Map<String, Object> propsToChangeS24U = Map.of(
+        "BRAND", "samsung",
+        "DEVICE", "e3q",
+        "MODEL", "SM-S928B",
+        "MANUFACTURER", "samsung"
+    );
+
+    private static final Map<String, Object> propsToChangeLenovoY700 = Map.of(
+        "MODEL", "Lenovo TB-9707F",
+        "MANUFACTURER", "lenovo"
+    );
+
+    private static final Map<String, Object> propsToChangeOP8P = Map.of(
+        "MODEL", "IN2020",
+        "MANUFACTURER", "OnePlus"
+    );
+
+    private static final Map<String, Object> propsToChangeOP9P = Map.of(
+        "MODEL", "LE2123",
+        "MANUFACTURER", "OnePlus"
+    );
+
+    private static final Map<String, Object> propsToChangeMI11TP = Map.of(
+        "MODEL", "2107113SI",
+        "MANUFACTURER", "Xiaomi"
+    );
+
+    private static final Map<String, Object> propsToChangeMI13P = Map.of(
+        "BRAND", "Xiaomi",
+        "MANUFACTURER", "Xiaomi",
+        "MODEL", "2210132C"
+    );
+
+    private static final Map<String, Object> propsToChangeF5 = Map.of(
+        "MODEL", "23049PCD8G",
+        "MANUFACTURER", "Xiaomi"
+    );
+
+    private static final Map<String, Object> propsToChangeBS4 = Map.of(
+        "MODEL", "2SM-X706B",
+        "MANUFACTURER", "blackshark"
     );
 
     private static final Set<String> sPixelFeatures = Set.of(
@@ -167,6 +230,56 @@ public class PropImitationHooks {
             dlog("Setting model to " + sNetflixModel + " for Netflix");
             setPropValue("MODEL", sNetflixModel);
         }
+
+        Map<String, Object> propsToChange = new HashMap<>();
+
+        if (UserSelectedSpoofUtils.shouldSpoofApp(context, packageName)) {
+            String profile = UserSelectedSpoofUtils.getSpoofProfile(context, packageName);
+            switch (profile) {
+                case "PixelXL":
+                    propsToChange.putAll(propsToChangePixelXL);
+                    break;
+                case "ROG6":
+                    propsToChange.putAll(propsToChangeROG6);
+                    break;
+                case "S24U":
+                    propsToChange.putAll(propsToChangeS24U);
+                    break;
+                case "LenovoY700":
+                    propsToChange.putAll(propsToChangeLenovoY700);
+                    break;
+                case "OP8P":
+                    propsToChange.putAll(propsToChangeOP8P);
+                    break;
+                case "OP9P":
+                    propsToChange.putAll(propsToChangeOP9P);
+                    break;
+                case "MI11TP":
+                    propsToChange.putAll(propsToChangeMI11TP);
+                    break;
+                case "MI13P":
+                    propsToChange.putAll(propsToChangeMI13P);
+                    break;
+                case "F5":
+                    propsToChange.putAll(propsToChangeF5);
+                    break;
+                case "BS4":
+                    propsToChange.putAll(propsToChangeBS4);
+                    break;
+            }
+        }
+
+        dlog("Defining props for: " + packageName);
+        for (Map.Entry<String, Object> prop : propsToChange.entrySet()) {
+            String key = prop.getKey();
+            Object value = prop.getValue();
+            dlog("Defining " + key + " prop for: " + packageName);
+            setPropValue(key, value);
+        }
+    }
+
+    private static void setPropValue(String key, Object value) {
+        setPropValue(key, value.toString());
     }
 
     private static void setPropValue(String key, String value) {
