@@ -802,8 +802,11 @@ constructor(
                                              */
                                             !alwaysCompose ||
                                                 (viewModel.isQsVisibleAndAnyShadeExpanded &&
-                                                    viewModel.expansionState.progress > 0f &&
-                                                    !viewModel.isEditing)
+                                                    viewModel.expansionState.progress >
+                                                        QSFragmentComposeViewModel
+                                                            .QS_LISTENING_THRESHOLD &&
+                                                    !viewModel.isEditing &&
+                                                    !viewModel.isStackScrollerOverscrolling)
                                         },
                                     )
                                 }

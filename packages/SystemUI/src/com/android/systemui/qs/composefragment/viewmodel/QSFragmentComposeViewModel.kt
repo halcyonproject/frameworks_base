@@ -268,7 +268,7 @@ constructor(
         if (forceQs) {
             QSExpansionState(1f)
         } else {
-            QSExpansionState(qsExpansion.coerceIn(0f, 1f))
+            QSExpansionState(qsExpansion.coerceIn(if (isQsExpanded) EARLY_EXPANSION else 0f, 1f))
         }
     }
 
@@ -668,6 +668,14 @@ constructor(
 
     // In the future, this may have other relevant elements.
     data class QSExpansionState(@FloatRange(0.0, 1.0) val progress: Float)
+
+    companion object {
+        private val EARLY_EXPANSION
+            get() = 1.0E-6F
+
+        val QS_LISTENING_THRESHOLD
+            get() = EARLY_EXPANSION * 2
+    }
 }
 
 private fun Float.constrainSquishiness(): Float {
