@@ -196,6 +196,11 @@ public class PropImitationHooks {
         final String packageName = context.getPackageName();
         final String processName = Application.getProcessName();
 
+        if (!SystemProperties.getBoolean("persist.sys.dps.enabled", false)) {
+            dlog("Prop spoofing disabled by user.");
+            return;
+        }
+
         if (TextUtils.isEmpty(packageName) || TextUtils.isEmpty(processName)) {
             Log.e(TAG, "Null package or process name");
             return;
@@ -207,7 +212,7 @@ public class PropImitationHooks {
             return;
         }
 
-        sStockFp = res.getString(R.string.config_stockFingerprint);
+        sStockFp = res.getString(R.string.config_dpsStockFp);
         sNetflixModel = res.getString(R.string.config_dpsNetflixModel);
 
         sProcessName = processName;
@@ -458,7 +463,6 @@ public class PropImitationHooks {
             dlog("Key attestation blocking is disabled because a keybox is defined to spoof");
             return;
         }
-
         // Check stack for Play Integrity
         if (isCallerPlayIntegrity()) {
             dlog("Blocked key attestation for play integrity");
