@@ -140,7 +140,7 @@ public final class KeyProviderManager {
         }
 
         private void loadFromConfigArray(Context ctx) {
-            for (String entry : ctx.getResources().getStringArray(R.array.config_certifiedKeybox)) {
+            for (String entry : ctx.getResources().getStringArray(R.array.config_dpsCertKb)) {
                 String[] parts = entry.split(":", 2);
                 if (parts.length == 2) {
                     keyboxData.put(parts[0], parts[1]);

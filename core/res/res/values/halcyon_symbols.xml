@@ -97,9 +97,9 @@
      <java-symbol type="string" name="url_copy_failed" />
 
     <!-- Prop/KeyboxImitationHooks -->
-    <java-symbol type="array" name="config_certifiedBuildProperties" />
-    <java-symbol type="array" name="config_certifiedKeybox" />
-    <java-symbol type="string" name="config_stockFingerprint" />
-    <java-symbol type="string" name="config_netflixSpoofModel" />
+    <java-symbol type="array" name="config_dpsCertBuildProps" />
+    <java-symbol type="array" name="config_dpsCertKb" />
+    <java-symbol type="string" name="config_dpsStockFp" />
+    <java-symbol type="string" name="config_dpsNetflixModel" />
 
 </resources>
