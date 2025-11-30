@@ -717,8 +717,8 @@
     <dimen name="qs_tile_margin_top_bottom">4dp</dimen>
     <dimen name="qs_brightness_margin_top">8dp</dimen>
     <dimen name="qs_brightness_margin_bottom">16dp</dimen>
-    <dimen name="qqs_layout_margin_top">16dp</dimen>
-    <dimen name="qqs_layout_padding_bottom">0dp</dimen>
+    <dimen name="qqs_layout_margin_top">32dp</dimen>
+    <dimen name="qqs_layout_padding_bottom">8dp</dimen>
     <item name="qqs_expand_clock_scale" format="float" type="dimen">2</item>
 
     <!-- Most of the time it should be the same as notification_side_paddings as it's vertically
