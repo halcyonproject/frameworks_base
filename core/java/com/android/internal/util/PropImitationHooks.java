@@ -29,6 +29,7 @@ import android.os.Build;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.Process;
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
@@ -234,6 +235,11 @@ public class PropImitationHooks {
         final String packageName = context.getPackageName();
         final String processName = Application.getProcessName();
 
+        if (!SystemProperties.getBoolean("persist.sys.dps.enabled", false)) {
+            dlog("Prop spoofing disabled by user.");
+            return;
+        }
+
         if (TextUtils.isEmpty(packageName) || TextUtils.isEmpty(processName)) {
             Log.e(TAG, "Null package or process name");
             return;
@@ -245,7 +251,7 @@ public class PropImitationHooks {
             return;
         }
 
-        sStockFp = res.getString(R.string.config_stockFingerprint);
+        sStockFp = res.getString(R.string.config_dpsStockFp);
         sNetflixModel = res.getString(R.string.config_dpsNetflixModel);
 
         sProcessName = processName;
@@ -419,20 +425,17 @@ public class PropImitationHooks {
         try {
             final ActivityTaskManager.RootTaskInfo focusedTask =
                     ActivityTaskManager.getService().getFocusedRootTaskInfo();
-
             return focusedTask != null && focusedTask.topActivity != null
                     && focusedTask.topActivity.equals(GMS_ADD_ACCOUNT_ACTIVITY);
         } catch (Exception e) {
             Log.e(TAG, "Unable to get top activity!", e);
         }
-
         return false;
     }
 
     public static boolean shouldBypassTaskPermission(Context context) {
         // GMS/Finsky don't have MANAGE_ACTIVITY_TASKS permission
         final int callingUid = Binder.getCallingUid();
-
         try {
             int gmsUid = context.getPackageManager()
                     .getApplicationInfo(PACKAGE_GMS, 0).uid;
@@ -457,12 +460,6 @@ public class PropImitationHooks {
     }
 
     public static void onEngineGetCertificateChain() {
-        // If a keybox is found, don't block key attestation
-        /*if (KeyProviderManager.isKeyboxAvailable()) {
-            dlog("Key attestation blocking is disabled because a keybox is defined to spoof");
-            return;
-        }*/
-
         // Check stack for Play Integrity
         if (isCallerPlayIntegrity()) {
             dlog("Blocked key attestation for play integrity");
