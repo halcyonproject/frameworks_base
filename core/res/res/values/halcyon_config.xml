@@ -100,9 +100,8 @@
     <bool name="config_filterDisplayModes">false</bool>
 
     <!-- Build properties from a GMS certified device against current platform SPL level -->
-    <string-array name="config_certifiedBuildProperties" translatable="false">
-      <!--
-        Each entry must be of the format
+    <string-array name="config_dpsCertBuildProps" translatable="false">
+      <!-- Each entry must be of the format
             FIELD:value
         with the field belonging to android.os.Build or android.os.Build.VERSION class.
         Example:
@@ -113,8 +112,14 @@
       -->
     </string-array>
 
+    <!-- Build fingerprint from stock ROM -->
+    <string name="config_dpsStockFp" translatable="false"></string>
+
+    <!-- Device model (Build.MODEL) to spoof for netflix, if not empty -->
+    <string name="config_dpsNetflixModel" translatable="false"></string>
+
     <!-- Keybox configuration for device certification -->
-    <string-array name="config_certifiedKeybox" translatable="false">
+    <string-array name="config_dpsCertKb" translatable="false">
       <!--
         Keybox entries for EC and RSA keys and certificates.
         These should be populated with valid data for device certification.
@@ -128,12 +133,6 @@
         <item>RSA.CERT_3:</item>
       -->
     </string-array>
-
-    <!-- Build fingerprint from stock ROM -->
-    <string name="config_stockFingerprint" translatable="false"></string>
-
-    <!-- Device model (Build.MODEL) to spoof for netflix, if not empty -->
-    <string name="config_netflixSpoofModel" translatable="false"></string>
 
    <!-- API URL to fetch PIF from -->
    <string name="config_pifUpdateUrl" translatable="false">https://raw.githubusercontent.com/PixelOS-AOSP/official_devices/{version}/API/updater/CertifiedProps/certified_build_props.json</string>
