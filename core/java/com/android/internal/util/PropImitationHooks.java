@@ -245,6 +245,13 @@ public class PropImitationHooks {
             return;
         }
 
+        sProcessName = processName;
+
+        if (android.os.Process.isIsolated()) {
+            dlog("Isolated process (" + processName + "), skipping all spoofing");
+            return;
+        }
+
         final Resources res = context.getResources();
         if (res == null) {
             Log.e(TAG, "Null resources");
