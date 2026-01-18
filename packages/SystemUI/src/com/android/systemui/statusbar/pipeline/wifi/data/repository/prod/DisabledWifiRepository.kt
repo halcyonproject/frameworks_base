@@ -57,6 +57,10 @@ class DisabledWifiRepository @Inject constructor() : RealWifiRepository {
     override val imsStates: StateFlow<List<ImsStateModel>> =
         MutableStateFlow<List<ImsStateModel>>(emptyList()).asStateFlow()
 
+    override fun disableWifi() {
+        // No-op
+    }
+
     override fun enableWifi() {
         // No-op
     }

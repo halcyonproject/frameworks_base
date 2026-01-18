@@ -68,6 +68,10 @@ constructor(
     private val _imsStates: MutableStateFlow<List<ImsStateModel>> = MutableStateFlow(emptyList())
     override val imsStates: StateFlow<List<ImsStateModel>> = _imsStates
 
+    override fun disableWifi() {
+        // No-op
+    }
+
     override fun enableWifi() {
         // No-op
     }
