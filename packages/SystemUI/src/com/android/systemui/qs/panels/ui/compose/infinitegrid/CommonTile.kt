@@ -30,6 +30,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -143,38 +144,43 @@ fun LargeTileContent(
             animateColorAsState(colors.iconBackground, label = "QSTileDualTargetBackgroundColor")
         val focusBorderColor = MaterialTheme.colorScheme.secondary
         Box(
-            modifier =
-                Modifier.size(CommonTileDefaults.ToggleTargetSize).thenIf(isDualTarget) {
-                    Modifier.borderOnFocus(color = focusBorderColor, iconShape.topEnd)
-                        .clip(iconShape)
-                        .verticalSquish(squishiness)
-                        .drawBehind { drawRect(animatedBackgroundColor) }
-                        .combinedClickable(
-                            onClick = toggleClick!!,
-                            onLongClick = onLongClick,
-                            onLongClickLabel = longPressLabel,
-                            hapticFeedbackEnabled = !Flags.msdlFeedback(),
-                        )
-                        .thenIf(accessibilityUiState != null) {
-                            Modifier.semantics {
-                                    accessibilityUiState as AccessibilityUiState
-                                    contentDescription = accessibilityUiState.contentDescription
-                                    stateDescription = accessibilityUiState.stateDescription
-                                    accessibilityUiState.toggleableState?.let {
-                                        toggleableState = it
-                                    }
-                                    role = Role.Switch
-                                }
-                                .sysuiResTag(TEST_TAG_TOGGLE)
-                        }
-                }
+            modifier = Modifier.fillMaxHeight().aspectRatio(1f),
+            contentAlignment = Alignment.Center,
         ) {
-            SmallTileContent(
-                iconProvider = iconProvider,
-                color = colors.icon,
-                size = { CommonTileDefaults.LargeTileIconSize },
-                modifier = Modifier.align(Alignment.Center),
-            )
+            Box(
+                modifier =
+                    Modifier.size(CommonTileDefaults.ToggleTargetSize).thenIf(isDualTarget) {
+                        Modifier.borderOnFocus(color = focusBorderColor, iconShape.topEnd)
+                            .clip(iconShape)
+                            .verticalSquish(squishiness)
+                            .drawBehind { drawRect(animatedBackgroundColor) }
+                            .combinedClickable(
+                                onClick = toggleClick!!,
+                                onLongClick = onLongClick,
+                                onLongClickLabel = longPressLabel,
+                                hapticFeedbackEnabled = !Flags.msdlFeedback(),
+                            )
+                            .thenIf(accessibilityUiState != null) {
+                                Modifier.semantics {
+                                        accessibilityUiState as AccessibilityUiState
+                                        contentDescription = accessibilityUiState.contentDescription
+                                        stateDescription = accessibilityUiState.stateDescription
+                                        accessibilityUiState.toggleableState?.let {
+                                            toggleableState = it
+                                        }
+                                        role = Role.Switch
+                                    }
+                                    .sysuiResTag(TEST_TAG_TOGGLE)
+                            }
+                    }
+            ) {
+                SmallTileContent(
+                    iconProvider = iconProvider,
+                    color = colors.icon,
+                    size = { CommonTileDefaults.LargeTileIconSize },
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            }
         }
 
         // Labels
@@ -377,7 +383,7 @@ fun Modifier.tileTestTag(iconOnly: Boolean): Modifier {
  */
 fun Modifier.largeTilePadding(isDualTarget: Boolean = false): Modifier {
     return padding(
-        start = TileStartPadding,
+        start = 0.dp,
         end = if (isDualTarget) TileDualTargetEndPadding else TileEndPadding,
     )
 }
@@ -422,7 +428,7 @@ object CommonTileDefaults {
     val TileEndPadding = 12.dp
     val TileDualTargetEndPadding = 8.dp
     val TileArrangementPadding = 6.dp
-    val InactiveCornerRadius = 50.dp
+    val InactiveCornerRadius = 1000.dp
     val TileLabelBlurWidth = 32.dp
     const val TILE_MARQUEE_ITERATIONS = 1
     const val TILE_INITIAL_DELAY_MILLIS = 2000

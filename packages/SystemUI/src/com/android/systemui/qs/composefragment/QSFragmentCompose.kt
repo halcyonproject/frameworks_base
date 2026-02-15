@@ -794,7 +794,42 @@ constructor(
                                 )
                                 .padding(horizontal = qsHorizontalMargin())
                     ) {
+                        val BrightnessSlider =
+                            @Composable {
+                                Element(Elements.BrightnessSlider, modifier = modifier) {
+                                    Box(
+                                        Modifier.systemGestureExclusionInShade(
+                                            enabled = {
+                                                /*
+                                             * While we are transitioning into QS (either from QQS
+                                             * or from gone), the global position of the brightness
+                                             * slider will change in every frame. This causes
+                                             * the modifier to send a new gesture exclusion
+                                             * rectangle on every frame. Instead, only apply the
+                                             * modifier when this is settled.
+                                             */
+                                                layoutState.transitionState is TransitionState.Idle &&
+                                                    viewModel.isNotTransitioning
+                                            }
+                                        )
+                                    ) {
+                                        AlwaysDarkMode {
+                                            BrightnessSliderContainer(
+                                                viewModel =
+                                                    viewModel.containerViewModel.brightnessSliderViewModel,
+                                                containerColors =
+                                                    ContainerColors(
+                                                        Color.Transparent,
+                                                        ContainerColors.defaultContainerColor,
+                                                    ),
+                                                modifier = Modifier.fillMaxWidth(),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         QuickQuickSettingsLayout(
+                            brightness = BrightnessSlider,
                             tiles = Tiles,
                             media = Media,
                             mediaInRow = viewModel.qqsMediaInRow,
@@ -861,10 +896,11 @@ constructor(
                         )
                         val BrightnessSlider =
                             @Composable {
-                                Box(
-                                    Modifier.systemGestureExclusionInShade(
-                                        enabled = {
-                                            /*
+                                Element(Elements.BrightnessSlider, modifier = modifier) {
+                                    Box(
+                                        Modifier.systemGestureExclusionInShade(
+                                            enabled = {
+                                                /*
                                              * While we are transitioning into QS (either from QQS
                                              * or from gone), the global position of the brightness
                                              * slider will change in every frame. This causes
@@ -872,22 +908,23 @@ constructor(
                                              * rectangle on every frame. Instead, only apply the
                                              * modifier when this is settled.
                                              */
-                                            layoutState.transitionState is TransitionState.Idle &&
-                                                viewModel.isNotTransitioning
-                                        }
-                                    )
-                                ) {
-                                    AlwaysDarkMode {
-                                        BrightnessSliderContainer(
-                                            viewModel =
-                                                containerViewModel.brightnessSliderViewModel,
-                                            containerColors =
-                                                ContainerColors(
-                                                    Color.Transparent,
-                                                    ContainerColors.defaultContainerColor,
-                                                ),
-                                            modifier = Modifier.fillMaxWidth(),
+                                                layoutState.transitionState is TransitionState.Idle &&
+                                                    viewModel.isNotTransitioning
+                                            }
                                         )
+                                    ) {
+                                        AlwaysDarkMode {
+                                            BrightnessSliderContainer(
+                                                viewModel =
+                                                    containerViewModel.brightnessSliderViewModel,
+                                                containerColors =
+                                                    ContainerColors(
+                                                        Color.Transparent,
+                                                        ContainerColors.defaultContainerColor,
+                                                    ),
+                                                modifier = Modifier.fillMaxWidth(),
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -1460,23 +1497,25 @@ private fun ContentScope.MediaObject(
 @Composable
 @VisibleForTesting
 fun QuickQuickSettingsLayout(
+    brightness: @Composable () -> Unit,
     tiles: @Composable () -> Unit,
     media: @Composable () -> Unit,
     mediaInRow: Boolean,
 ) {
-    if (mediaInRow) {
-        Row(
-            horizontalArrangement = spacedBy(dimensionResource(R.dimen.qs_tile_margin_vertical)),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(modifier = Modifier.weight(1f)) { tiles() }
-            Box(modifier = Modifier.weight(1f)) { media() }
-        }
-    } else {
-        Column(verticalArrangement = spacedBy(dimensionResource(R.dimen.qs_tile_margin_vertical))) {
+    Column(verticalArrangement = spacedBy(dimensionResource(R.dimen.qs_tile_margin_vertical))) {
+        if (mediaInRow) {
+            Row(
+                horizontalArrangement = spacedBy(dimensionResource(R.dimen.qs_tile_margin_vertical)),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(modifier = Modifier.weight(1f)) { tiles() }
+                Box(modifier = Modifier.weight(1f)) { media() }
+            }
+        } else {
             tiles()
             media()
         }
+        brightness()
     }
 }
 
@@ -1489,12 +1528,11 @@ fun QuickSettingsLayout(
     media: @Composable () -> Unit,
     mediaInRow: Boolean,
 ) {
-    if (mediaInRow) {
-        Column(
-            verticalArrangement = spacedBy(QuickSettingsShade.Dimensions.Padding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            brightness()
+    Column(
+        verticalArrangement = spacedBy(QuickSettingsShade.Dimensions.Padding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (mediaInRow) {
             Row(
                 horizontalArrangement = spacedBy(QuickSettingsShade.Dimensions.Padding),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1502,16 +1540,11 @@ fun QuickSettingsLayout(
                 Box(modifier = Modifier.weight(1f)) { tiles() }
                 Box(modifier = Modifier.weight(1f)) { media() }
             }
-        }
-    } else {
-        Column(
-            verticalArrangement = spacedBy(QuickSettingsShade.Dimensions.Padding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            brightness()
+        } else {
             tiles()
             media()
         }
+        brightness()
     }
 }
 

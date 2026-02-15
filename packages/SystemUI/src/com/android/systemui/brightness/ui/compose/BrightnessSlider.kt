@@ -25,6 +25,7 @@ import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -268,88 +269,56 @@ fun BrightnessSlider(
                 )
             },
             track = { sliderState ->
-                var showIconActive by remember { mutableStateOf(true) }
-                val iconActiveAlphaAnimatable = remember {
-                    Animatable(
-                        initialValue = 1f,
-                        typeConverter = Float.VectorConverter,
-                        label = "iconActiveAlpha",
+
+
+                Canvas(
+                    modifier = Modifier
+                        .height(TrackHeight)
+                        .fillMaxWidth()
+                ) {
+                    val trackCornerRadius = CornerRadius(size.height / 2, size.height / 2)
+                    val activeTrackEnd = size.width * sliderState.coercedValueAsFraction
+
+                    // Draw Inactive Track (Background) - Full Width
+                    drawRoundRect(
+                        color = colors.inactiveTrackColor,
+                        topLeft = Offset(0f, 0f),
+                        size = size,
+                        cornerRadius = trackCornerRadius
                     )
-                }
 
-                val iconInactiveAlphaAnimatable = remember {
-                    Animatable(
-                        initialValue = 0f,
-                        typeConverter = Float.VectorConverter,
-                        label = "iconInactiveAlpha",
+                    // Draw Active Track (Progress)
+                    drawRoundRect(
+                        color = colors.activeTrackColor,
+                        topLeft = Offset(0f, 0f),
+                        size = Size(activeTrackEnd, size.height),
+                        cornerRadius = trackCornerRadius
                     )
+
+                    // Draw Icons
+                    val yOffset = size.height / 2 - IconSize.toSize().height / 2
+                    val iconOffset = Offset(size.width - IconPadding.toPx() - IconSize.width.toPx(), yOffset)
+
+                    // Draw active icon clipped to active track
+                    drawContext.canvas.save()
+                    drawContext.canvas.clipRect(0f, 0f, activeTrackEnd, size.height)
+                    trackIcon(
+                        Offset(size.width, yOffset),
+                        activeIconColor,
+                        1f,
+                    )
+                    drawContext.canvas.restore()
+
+                    // Draw inactive icon clipped to inactive track
+                    drawContext.canvas.save()
+                    drawContext.canvas.clipRect(activeTrackEnd, 0f, size.width, size.height)
+                    trackIcon(
+                        Offset(size.width, yOffset),
+                        inactiveIconColor,
+                        1f,
+                    )
+                    drawContext.canvas.restore()
                 }
-
-                LaunchedEffect(iconActiveAlphaAnimatable, iconInactiveAlphaAnimatable, showIconActive) {
-                    if (showIconActive) {
-                        launch { iconActiveAlphaAnimatable.appear() }
-                        launch { iconInactiveAlphaAnimatable.disappear() }
-                    } else {
-                        launch { iconActiveAlphaAnimatable.disappear() }
-                        launch { iconInactiveAlphaAnimatable.appear() }
-                    }
-                }
-
-                SliderDefaults.Track(
-                    sliderState = sliderState,
-                    modifier =
-                        Modifier.motionTestValues {
-                                (iconActiveAlphaAnimatable.isRunning ||
-                                    iconInactiveAlphaAnimatable.isRunning) exportAs
-                                    BrightnessSliderMotionTestKeys.AnimatingIcon
-
-                                iconActiveAlphaAnimatable.value exportAs
-                                    BrightnessSliderMotionTestKeys.ActiveIconAlpha
-                                iconInactiveAlphaAnimatable.value exportAs
-                                    BrightnessSliderMotionTestKeys.InactiveIconAlpha
-                            }
-                            .height(TrackHeight)
-                            .drawWithContent {
-                                drawContent()
-
-                                val yOffset = size.height / 2 - IconSize.toSize().height / 2
-                                val activeTrackStart = 0f
-                                val activeTrackEnd =
-                                    size.width * sliderState.coercedValueAsFraction -
-                                        ThumbTrackGapSize.toPx()
-                                val inactiveTrackStart = activeTrackEnd + ThumbTrackGapSize.toPx() * 2
-                                val inactiveTrackEnd = size.width
-
-                                val activeTrackWidth = activeTrackEnd - activeTrackStart
-                                val inactiveTrackWidth = inactiveTrackEnd - inactiveTrackStart
-
-                                if (
-                                    IconSize.toSize().width <
-                                        inactiveTrackWidth - IconPadding.toPx() * 2
-                                ) {
-                                    showIconActive = false
-                                    trackIcon(
-                                        Offset(inactiveTrackEnd, yOffset),
-                                        inactiveIconColor,
-                                        iconInactiveAlphaAnimatable.value,
-                                    )
-                                } else if (
-                                    IconSize.toSize().width < activeTrackWidth - IconPadding.toPx() * 2
-                                ) {
-                                    showIconActive = true
-                                    trackIcon(
-                                        Offset(activeTrackEnd, yOffset),
-                                        activeIconColor,
-                                        iconActiveAlphaAnimatable.value,
-                                    )
-                                }
-                            },
-                    trackCornerSize = SliderTrackRoundedCorner,
-                    trackInsideCornerSize = 2.dp,
-                    drawStopIndicator = null,
-                    thumbTrackGapSize = ThumbTrackGapSize,
-                    colors = colors,
-                )
             },
         )
 
@@ -515,30 +484,16 @@ data class ContainerColors(val idleColor: Color, val mirrorColor: Color) {
 }
 
 private object Dimensions {
-    val SliderBackgroundFrameSize = DpSize(10.dp, 6.dp)
-    val SliderBackgroundRoundedCorner = 24.dp
-    val SliderTrackRoundedCorner = 12.dp
+    val SliderBackgroundFrameSize = DpSize(0.dp, 0.dp)
+    val SliderBackgroundRoundedCorner = 1000.dp
+    val SliderTrackRoundedCorner = 1000.dp
     val IconSize = DpSize(28.dp, 28.dp)
-    val IconPadding = 6.dp
-    val ThumbTrackGapSize = 6.dp
+    val IconPadding = 12.dp
+    val ThumbTrackGapSize = 0.dp
 
-    val ThumbHeight : Dp
-        @Composable
-        @ReadOnlyComposable
-        get() =
-            dimensionResource(id = R.dimen.overlay_qs_layout_brightness_thumb_height)
-
-    val ThumbWidth : Dp
-        @Composable
-        @ReadOnlyComposable
-        get() =
-            dimensionResource(id = R.dimen.overlay_qs_layout_brightness_thumb_width)
-
-    val TrackHeight: Dp
-        @Composable
-        @ReadOnlyComposable
-        get() =
-            dimensionResource(id = R.dimen.overlay_qs_layout_brightness_track_height)
+    val ThumbHeight = 0.dp
+    val ThumbWidth = 0.dp
+    val TrackHeight = 52.dp
 }
 
 private object AnimationSpecs {

@@ -33,8 +33,11 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.spacedBy
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -200,6 +203,9 @@ fun ContentScope.Tile(
         val tileShape by TileDefaults.animateTileShapeAsState(uiState.state)
         val animatedColor by animateColorAsState(colors.background, label = "QSTileBackgroundColor")
         val isDualTarget = uiState.handlesSecondaryClick
+        val spacing = with(LocalDensity.current) {
+            dimensionResource(R.dimen.qs_tile_margin_horizontal).roundToPx()
+        }
 
         val surfaceRevealModifier: Modifier
         val contentRevealModifier: Modifier
@@ -375,10 +381,24 @@ fun TileContainer(
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
+    val spacing = with(LocalDensity.current) {
+        dimensionResource(R.dimen.qs_tile_margin_horizontal).roundToPx()
+    }
+
     Box(
         modifier =
             modifier
-                .height(TileHeight)
+                .thenIf(iconOnly) { Modifier.aspectRatio(1f) }
+                .thenIf(!iconOnly) {
+                    Modifier.layout { measurable, constraints ->
+                        val height = (constraints.maxWidth - spacing) / 2
+                        val placeable =
+                            measurable.measure(
+                                constraints.copy(minHeight = height, maxHeight = height)
+                            )
+                        layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+                    }
+                }
                 .fillMaxWidth()
                 .tileCombinedClickable(
                     onClick = onClick ?: {},
@@ -400,12 +420,20 @@ fun LargeStaticTile(
     modifier: Modifier = Modifier,
 ) {
     val colors = TileDefaults.getColorForState(uiState = uiState, iconOnly = false)
+    val spacing = with(LocalDensity.current) {
+        dimensionResource(R.dimen.qs_tile_margin_horizontal).roundToPx()
+    }
 
     Box(
         modifier
             .clip(TileDefaults.animateTileShapeAsState(state = uiState.state).value)
             .background(colors.background)
-            .height(TileHeight)
+            .layout { measurable, constraints ->
+                val height = (constraints.maxWidth - spacing) / 2
+                val placeable =
+                    measurable.measure(constraints.copy(minHeight = height, maxHeight = height))
+                layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+            }
             .largeTilePadding()
     ) {
         LargeTileContent(
@@ -479,8 +507,8 @@ data class TileColors(
 )
 
 private object TileDefaults {
-    val ActiveIconCornerRadius = 16.dp
-    val ActiveTileCornerRadius = 24.dp
+    val ActiveIconCornerRadius = InactiveCornerRadius
+    val ActiveTileCornerRadius = InactiveCornerRadius
 
     /** An active tile uses the active color as background */
     @Composable
