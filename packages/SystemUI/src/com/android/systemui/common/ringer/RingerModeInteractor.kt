@@ -65,19 +65,25 @@ class RingerModeInteractorImpl(
     private val hasVibrator: Boolean = vibrator?.hasVibrator() == true
 
     override val ringerMode: Flow<Int> = callbackFlow {
-        trySend(audioManager.ringerMode)
+        trySend(audioManager.ringerModeInternal)
 
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                if (intent?.action == AudioManager.RINGER_MODE_CHANGED_ACTION) {
-                    trySend(audioManager.ringerMode)
+                if (intent?.action == AudioManager.INTERNAL_RINGER_MODE_CHANGED_ACTION ||
+                    intent?.action == AudioManager.RINGER_MODE_CHANGED_ACTION) {
+                    trySend(audioManager.ringerModeInternal)
                 }
             }
         }
 
-        val filter = IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION)
-        context.registerReceiver(receiver, filter)
-        awaitClose { context.unregisterReceiver(receiver) }
+        val filter = IntentFilter().apply {
+            addAction(AudioManager.INTERNAL_RINGER_MODE_CHANGED_ACTION)
+            addAction(AudioManager.RINGER_MODE_CHANGED_ACTION)
+        }
+        
+        val appContext = context.applicationContext ?: context
+        appContext.registerReceiver(receiver, filter)
+        awaitClose { appContext.unregisterReceiver(receiver) }
     }.distinctUntilChanged()
 
     override val dndMode: Flow<Boolean> = callbackFlow {
