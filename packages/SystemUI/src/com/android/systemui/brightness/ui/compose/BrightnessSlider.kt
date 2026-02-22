@@ -194,12 +194,12 @@ fun BrightnessSlider(
         }
     val activeIconColor = colors.activeTickColor
     val inactiveIconColor = colors.inactiveTickColor
-    // Offset from the right
+    // Offset from the left
     val trackIcon: DrawScope.(Offset, Color, Float) -> Unit = remember {
         { offset, color, alpha ->
             val rtl = layoutDirection == LayoutDirection.Rtl
             scale(if (rtl) -1f else 1f, 1f) {
-                translate(offset.x - IconPadding.toPx() - IconSize.toSize().width, offset.y) {
+                translate(offset.x, offset.y) {
                     with(painter) {
                         draw(
                             IconSize.toSize(),
@@ -277,7 +277,7 @@ fun BrightnessSlider(
                         .fillMaxWidth()
                 ) {
                     val trackCornerRadius = CornerRadius(size.height / 2, size.height / 2)
-                    val activeTrackEnd = size.width * sliderState.coercedValueAsFraction
+                    val activeTrackEnd = (size.width * sliderState.coercedValueAsFraction).coerceAtLeast(size.height)
 
                     // Draw Inactive Track (Background) - Full Width
                     drawRoundRect(
@@ -297,13 +297,13 @@ fun BrightnessSlider(
 
                     // Draw Icons
                     val yOffset = size.height / 2 - IconSize.toSize().height / 2
-                    val iconOffset = Offset(size.width - IconPadding.toPx() - IconSize.width.toPx(), yOffset)
+                    val iconOffset = Offset(IconPadding.toPx(), yOffset)
 
                     // Draw active icon clipped to active track
                     drawContext.canvas.save()
                     drawContext.canvas.clipRect(0f, 0f, activeTrackEnd, size.height)
                     trackIcon(
-                        Offset(size.width, yOffset),
+                        iconOffset,
                         activeIconColor,
                         1f,
                     )
@@ -313,7 +313,7 @@ fun BrightnessSlider(
                     drawContext.canvas.save()
                     drawContext.canvas.clipRect(activeTrackEnd, 0f, size.width, size.height)
                     trackIcon(
-                        Offset(size.width, yOffset),
+                        iconOffset,
                         inactiveIconColor,
                         1f,
                     )
