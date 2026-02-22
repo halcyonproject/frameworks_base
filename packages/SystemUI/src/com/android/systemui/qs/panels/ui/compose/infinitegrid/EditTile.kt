@@ -44,6 +44,7 @@ import androidx.compose.foundation.clipScrollableContainer
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement.spacedBy
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -1347,12 +1348,12 @@ fun EditTile(
                     val startPadding =
                         if (currentProgress == 0f) {
                             // Find the center of the max width when the tile is icon only
-                            iconHorizontalCenter(constraints.maxWidth)
+                            (constraints.maxWidth - constraints.maxHeight) / 2f
                         } else {
                             // Find the center of the minimum width to hold the same position as the
                             // tile is resized.
                             val basePadding =
-                                min?.let { iconHorizontalCenter(it.roundToInt()) } ?: 0f
+                                min?.let { (it - constraints.maxHeight) / 2f } ?: 0f
                             // Large tiles, represented with a progress of 1f, have a 0.dp padding
                             basePadding * (1f - currentProgress)
                         }
@@ -1366,17 +1367,22 @@ fun EditTile(
     ) {
         // Icon
         Box(
-            Modifier.size(ToggleTargetSize).thenIf(tile.isDualTarget) {
-                Modifier.drawBehind { drawCircle(colors.iconBackground, alpha = progress()) }
-            }
+            modifier = Modifier.fillMaxHeight().aspectRatio(1f),
+            contentAlignment = Alignment.Center,
         ) {
-            SmallTileContent(
-                iconProvider = { tile.icon },
-                color = colors.icon,
-                animateToEnd = true,
-                size = { CommonTileDefaults.IconSize - iconSizeDiff * progress() },
-                modifier = Modifier.align(Alignment.Center),
-            )
+            Box(
+                Modifier.size(ToggleTargetSize).thenIf(tile.isDualTarget) {
+                    Modifier.drawBehind { drawCircle(colors.iconBackground, alpha = progress()) }
+                }
+            ) {
+                SmallTileContent(
+                    iconProvider = { tile.icon },
+                    color = colors.icon,
+                    animateToEnd = true,
+                    size = { CommonTileDefaults.IconSize - iconSizeDiff * progress() },
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            }
         }
 
         // Labels, positioned after the icon
@@ -1387,11 +1393,6 @@ fun EditTile(
             modifier = Modifier.weight(1f).graphicsLayer { this.alpha = progress() },
         )
     }
-}
-
-private fun MeasureScope.iconHorizontalCenter(containerSize: Int): Float {
-    return (containerSize - ToggleTargetSize.roundToPx()) / 2f -
-        CommonTileDefaults.TileStartPadding.toPx()
 }
 
 private fun Modifier.tileBackground(color: () -> Color): Modifier {
