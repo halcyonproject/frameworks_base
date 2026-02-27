@@ -26,6 +26,11 @@
     <string name="quick_settings_aod_label">AOD</string>
     <string name="quick_settings_aod_off_powersave_label">AOD off\nBattery saver</string>
 
+    <!-- Blur QS tile -->
+    <string name="quick_settings_blur_label">Blur</string>
+    <string name="accessibility_quick_settings_blur_off">Blur off.</string>
+    <string name="accessibility_quick_settings_blur_on">Blur on.</string>
+
     <!-- Caffeine QS tile -->
     <string name="quick_settings_caffeine_label">Caffeine</string>
     <string name="accessibility_quick_settings_caffeine_off">Caffeine off.</string>
