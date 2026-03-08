@@ -34,6 +34,7 @@ import android.graphics.drawable.DrawableWrapper;
 import android.os.Handler;
 import android.telephony.CellSignalStrength;
 import android.util.LayoutDirection;
+import android.util.Log;
 import android.util.PathParser;
 
 import androidx.annotation.NonNull;
@@ -107,8 +108,18 @@ public class SignalDrawable extends DrawableWrapper {
                 com.android.internal.R.string.config_signalAttributionPath);
         final String roamingPathString = context.getString(
                 R.string.config_signalRoamingPath);
-        mAttributionPath.set(PathParser.createPathFromPathData(attributionPathString));
-        mRoamingPath.set(PathParser.createPathFromPathData(roamingPathString));
+        try {
+            mAttributionPath.set(PathParser.createPathFromPathData(attributionPathString));
+        } catch (Exception e) {
+            Log.e(TAG, "Invalid attribution path data: " + attributionPathString, e);
+            mAttributionPath.set(new Path()); // Use empty path as fallback
+        }
+        try {
+            mRoamingPath.set(PathParser.createPathFromPathData(roamingPathString));
+        } catch (Exception e) {
+            Log.e(TAG, "Invalid roaming path data: " + roamingPathString, e);
+            mRoamingPath.set(new Path()); // Use empty path as fallback
+        }
         updateScaledAttributionPath();
         mCutoutWidthFraction = context.getResources().getFloat(
                 com.android.internal.R.dimen.config_signalCutoutWidthFraction);
