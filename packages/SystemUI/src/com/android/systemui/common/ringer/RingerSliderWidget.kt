@@ -44,6 +44,7 @@ fun RingerSliderWidget(
     modifier: Modifier = Modifier,
     isDozing: Boolean = false,
     border: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(1000.dp),
     onLongClick: (() -> Unit)? = null
 ) {
     val mode by interactor.ringerMode.collectAsState(initial = interactor.getCurrentMode())
@@ -83,12 +84,12 @@ fun RingerSliderWidget(
                     isDndEnabled -> theme.dndBg
                     else -> theme.neutralBg
                 },
-                RoundedCornerShape(1000.dp)
+                shape
             )
-            .clip(RoundedCornerShape(1000.dp))
+            .clip(shape)
             .then(
                 if (isDozing)
-                    Modifier.border(theme.dozeStroke, Color.White, RoundedCornerShape(1000.dp))
+                    Modifier.border(theme.dozeStroke, Color.White, shape)
                 else border
             )
             .pointerInput(Unit) {
@@ -193,16 +194,16 @@ fun RingerSliderWidget(
                             isDndEnabled -> theme.dndBg
                             else -> theme.activeBg
                         },
-                        RoundedCornerShape(1000.dp)
+                        shape
                     )
                     .then(
                         when {
                             isDozing ->
-                            Modifier.border(theme.dozeStroke, Color.White, RoundedCornerShape(1000.dp))
+                            Modifier.border(theme.dozeStroke, Color.White, shape)
                             isDndEnabled ->
-                                Modifier.border(2.dp, theme.dndBg, RoundedCornerShape(1000.dp))
+                                Modifier.border(2.dp, theme.dndBg, shape)
                             else ->
-                                Modifier.border(2.dp, theme.activeBg, RoundedCornerShape(1000.dp))
+                                Modifier.border(2.dp, theme.activeBg, shape)
                         }
                     ),
                 contentAlignment = Alignment.Center

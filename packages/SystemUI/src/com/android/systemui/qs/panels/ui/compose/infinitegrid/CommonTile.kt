@@ -143,8 +143,15 @@ fun LargeTileContent(
         val animatedBackgroundColor by
             animateColorAsState(colors.iconBackground, label = "QSTileDualTargetBackgroundColor")
         val focusBorderColor = MaterialTheme.colorScheme.secondary
+        val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
+        val iconContainerModifier = if (isNestUI) {
+            Modifier.fillMaxHeight().aspectRatio(1f)
+        } else {
+            Modifier.size(CommonTileDefaults.ToggleTargetSize)
+        }
+
         Box(
-            modifier = Modifier.fillMaxHeight().aspectRatio(1f),
+            modifier = iconContainerModifier,
             contentAlignment = Alignment.Center,
         ) {
             Box(
@@ -376,14 +383,14 @@ fun Modifier.tileTestTag(iconOnly: Boolean): Modifier {
 }
 
 /**
- * Apply the correct padding for large tiles
- *
- * Large tiles have a different end padding based on the content, such as if it's a dual target tile
- * or if it has a side drawable.
+ * Adds padding to a large tile, differentiating between start and end padding depending on whether
+ * it's a dual target tile or if it has a side drawable.
  */
+@Composable
 fun Modifier.largeTilePadding(isDualTarget: Boolean = false): Modifier {
+    val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
     return padding(
-        start = 0.dp,
+        start = if (isNestUI) 0.dp else CommonTileDefaults.TileStartPadding,
         end = if (isDualTarget) TileDualTargetEndPadding else TileEndPadding,
     )
 }

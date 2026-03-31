@@ -205,12 +205,16 @@ fun ContentScope.Tile(
             return@trace
         }
 
-        // TODO(b/361789146): Draw the shapes instead of clipping
         val tileShape by TileDefaults.animateTileShapeAsState(uiState.state)
         val animatedColor by animateColorAsState(colors.background, label = "QSTileBackgroundColor")
         val isDualTarget = uiState.handlesSecondaryClick
-        val spacing = with(LocalDensity.current) {
-            dimensionResource(R.dimen.qs_tile_margin_horizontal).roundToPx()
+        val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
+        val spacing = if (isNestUI) {
+            with(LocalDensity.current) {
+                dimensionResource(R.dimen.qs_tile_margin_horizontal).roundToPx()
+            }
+        } else {
+            with(LocalDensity.current) { 8.dp.roundToPx() }
         }
 
         val surfaceRevealModifier: Modifier
@@ -387,15 +391,21 @@ fun TileContainer(
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val spacing = with(LocalDensity.current) {
-        dimensionResource(R.dimen.qs_tile_margin_horizontal).roundToPx()
+    val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
+    val tileHeight = TileDefaults.TileHeight
+    val spacing = if (isNestUI) {
+        with(LocalDensity.current) {
+            dimensionResource(R.dimen.qs_tile_margin_horizontal).roundToPx()
+        }
+    } else {
+        with(LocalDensity.current) { 8.dp.roundToPx() }
     }
 
     Box(
         modifier =
             modifier
-                .thenIf(iconOnly) { Modifier.aspectRatio(1f) }
-                .thenIf(!iconOnly) {
+                .thenIf(isNestUI && iconOnly) { Modifier.aspectRatio(1f) }
+                .thenIf(isNestUI && !iconOnly) {
                     Modifier.layout { measurable, constraints ->
                         val height = (constraints.maxWidth - spacing) / 2
                         val placeable =
@@ -404,6 +414,9 @@ fun TileContainer(
                             )
                         layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
                     }
+                }
+                .thenIf(!isNestUI) {
+                    Modifier.height(tileHeight)
                 }
                 .fillMaxWidth()
                 .tileCombinedClickable(
@@ -426,19 +439,30 @@ fun LargeStaticTile(
     modifier: Modifier = Modifier,
 ) {
     val colors = TileDefaults.getColorForState(uiState = uiState, iconOnly = false)
-    val spacing = with(LocalDensity.current) {
-        dimensionResource(R.dimen.qs_tile_margin_horizontal).roundToPx()
+    val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
+    val tileHeight = TileDefaults.TileHeight
+    val spacing = if (isNestUI) {
+        with(LocalDensity.current) {
+            dimensionResource(R.dimen.qs_tile_margin_horizontal).roundToPx()
+        }
+    } else {
+        with(LocalDensity.current) { 8.dp.roundToPx() }
     }
 
     Box(
         modifier
             .clip(TileDefaults.animateTileShapeAsState(state = uiState.state).value)
             .background(colors.background)
-            .layout { measurable, constraints ->
-                val height = (constraints.maxWidth - spacing) / 2
-                val placeable =
-                    measurable.measure(constraints.copy(minHeight = height, maxHeight = height))
-                layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+            .thenIf(isNestUI) {
+                Modifier.layout { measurable, constraints ->
+                    val height = (constraints.maxWidth - spacing) / 2
+                    val placeable =
+                        measurable.measure(constraints.copy(minHeight = height, maxHeight = height))
+                    layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+                }
+            }
+            .thenIf(!isNestUI) {
+                Modifier.height(tileHeight)
             }
             .largeTilePadding()
     ) {
@@ -513,8 +537,6 @@ data class TileColors(
 )
 
 private object TileDefaults {
-    val ActiveIconCornerRadius = InactiveCornerRadius
-    val ActiveTileCornerRadius = InactiveCornerRadius
 
     /** An active tile uses the active color as background */
     @Composable
@@ -600,20 +622,27 @@ private object TileDefaults {
         }
     }
 
+    val TileHeight
+        @Composable get() = 64.dp
+
     @Composable
     fun animateIconShapeAsState(state: Int): State<RoundedCornerShape> {
+        val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
+        val activeCornerRadius = if (isNestUI) InactiveCornerRadius else 16.dp
         return animateShapeAsState(
             state = state,
-            activeCornerRadius = ActiveIconCornerRadius,
+            activeCornerRadius = activeCornerRadius,
             label = "QSTileCornerRadius",
         )
     }
 
     @Composable
     fun animateTileShapeAsState(state: Int): State<RoundedCornerShape> {
+        val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
+        val activeCornerRadius = if (isNestUI) InactiveCornerRadius else 24.dp
         return animateShapeAsState(
             state = state,
-            activeCornerRadius = ActiveTileCornerRadius,
+            activeCornerRadius = activeCornerRadius,
             label = "QSTileIconCornerRadius",
         )
     }

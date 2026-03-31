@@ -40,6 +40,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -216,6 +219,15 @@ fun BrightnessSlider(
         com.android.internal.R.bool.config_automatic_brightness_available
     )
 
+    val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
+
+    val trackHeight = if (isNestUI) 52.dp else dimensionResource(R.dimen.overlay_qs_layout_brightness_track_height)
+    val thumbHeight = if (isNestUI) 0.dp else dimensionResource(R.dimen.overlay_qs_layout_brightness_thumb_height)
+    val thumbWidth = if (isNestUI) 0.dp else dimensionResource(R.dimen.overlay_qs_layout_brightness_thumb_width)
+    val thumbTrackGapSize = if (isNestUI) 0.dp else 6.dp
+    val iconPadding = if (isNestUI) 12.dp else 6.dp
+    val sliderTrackRoundedCorner = if (isNestUI) 1000.dp else 12.dp
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
@@ -264,65 +276,133 @@ fun BrightnessSlider(
                 SliderDefaults.Thumb(
                     interactionSource = interactionSource,
                     enabled = enabled,
-                    thumbSize = DpSize(ThumbWidth, ThumbHeight),
+                    thumbSize = DpSize(thumbWidth, thumbHeight),
                     colors = colors,
                 )
             },
             track = { sliderState ->
 
+                if (isNestUI) {
+                    Canvas(
+                        modifier = Modifier
+                            .height(trackHeight)
+                            .fillMaxWidth()
+                    ) {
+                        val trackCornerRadius = CornerRadius(size.height / 2, size.height / 2)
+                        val activeTrackEnd = (size.width * sliderState.coercedValueAsFraction).coerceAtLeast(size.height)
 
-                Canvas(
-                    modifier = Modifier
-                        .height(TrackHeight)
-                        .fillMaxWidth()
-                ) {
-                    val trackCornerRadius = CornerRadius(size.height / 2, size.height / 2)
-                    val activeTrackEnd = (size.width * sliderState.coercedValueAsFraction).coerceAtLeast(size.height)
+                        // Draw Inactive Track (Background) - Full Width
+                        drawRoundRect(
+                            color = colors.inactiveTrackColor,
+                            topLeft = Offset(0f, 0f),
+                            size = size,
+                            cornerRadius = trackCornerRadius
+                        )
 
-                    // Draw Inactive Track (Background) - Full Width
-                    drawRoundRect(
-                        color = colors.inactiveTrackColor,
-                        topLeft = Offset(0f, 0f),
-                        size = size,
-                        cornerRadius = trackCornerRadius
-                    )
+                        // Draw Active Track (Progress)
+                        drawRoundRect(
+                            color = colors.activeTrackColor,
+                            topLeft = Offset(0f, 0f),
+                            size = Size(activeTrackEnd, size.height),
+                            cornerRadius = trackCornerRadius
+                        )
 
-                    // Draw Active Track (Progress)
-                    drawRoundRect(
-                        color = colors.activeTrackColor,
-                        topLeft = Offset(0f, 0f),
-                        size = Size(activeTrackEnd, size.height),
-                        cornerRadius = trackCornerRadius
-                    )
+                        // Draw Icons
+                        val yOffset = size.height / 2 - IconSize.toSize().height / 2
+                        val iconOffset = Offset(iconPadding.toPx(), yOffset)
 
-                    // Draw Icons
-                    val yOffset = size.height / 2 - IconSize.toSize().height / 2
-                    val iconOffset = Offset(IconPadding.toPx(), yOffset)
+                        // Draw active icon clipped to active track
+                        drawContext.canvas.save()
+                        drawContext.canvas.clipRect(0f, 0f, activeTrackEnd, size.height)
+                        trackIcon(
+                            iconOffset,
+                            activeIconColor,
+                            1f,
+                        )
+                        drawContext.canvas.restore()
 
-                    // Draw active icon clipped to active track
-                    drawContext.canvas.save()
-                    drawContext.canvas.clipRect(0f, 0f, activeTrackEnd, size.height)
-                    trackIcon(
-                        iconOffset,
-                        activeIconColor,
-                        1f,
-                    )
-                    drawContext.canvas.restore()
+                        // Draw inactive icon clipped to inactive track
+                        drawContext.canvas.save()
+                        drawContext.canvas.clipRect(activeTrackEnd, 0f, size.width, size.height)
+                        trackIcon(
+                            iconOffset,
+                            inactiveIconColor,
+                            1f,
+                        )
+                        drawContext.canvas.restore()
+                    }
+                } else {
+                    val activeIconAlpha = remember { Animatable(0f, Float.VectorConverter) }
+                    val inactiveIconAlpha = remember { Animatable(0f, Float.VectorConverter) }
+                    val progress = sliderState.coercedValueAsFraction
+                    val drawingActive = progress > 0.01f
 
-                    // Draw inactive icon clipped to inactive track
-                    drawContext.canvas.save()
-                    drawContext.canvas.clipRect(activeTrackEnd, 0f, size.width, size.height)
-                    trackIcon(
-                        iconOffset,
-                        inactiveIconColor,
-                        1f,
-                    )
-                    drawContext.canvas.restore()
+                    LaunchedEffect(drawingActive) {
+                        if (drawingActive) {
+                            inactiveIconAlpha.disappear()
+                            activeIconAlpha.appear()
+                        } else {
+                            activeIconAlpha.disappear()
+                            inactiveIconAlpha.appear()
+                        }
+                    }
+
+                    Canvas(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(trackHeight)
+                            .motionTestValues {
+                                activeIconAlpha.value exportAs BrightnessSliderMotionTestKeys.ActiveIconAlpha
+                                inactiveIconAlpha.value exportAs BrightnessSliderMotionTestKeys.InactiveIconAlpha
+                                drawingActive exportAs BrightnessSliderMotionTestKeys.AnimatingIcon
+                            }
+                    ) {
+                        val trackCornerRadius = CornerRadius(sliderTrackRoundedCorner.toPx())
+                        val thumbCenter = size.width * sliderState.coercedValueAsFraction
+                        val gapPx = thumbTrackGapSize.toPx()
+                        val thumbWidthPx = thumbWidth.toPx()
+
+                        val activeTrackEnd = (thumbCenter - thumbWidthPx / 2 - gapPx).coerceAtLeast(0f)
+                        val inactiveTrackStart = (thumbCenter + thumbWidthPx / 2 + gapPx).coerceAtMost(size.width)
+
+                        clipPath(
+                            Path().apply {
+                                addRoundRect(
+                                    RoundRect(
+                                        0f, 0f, size.width, size.height, trackCornerRadius
+                                    )
+                                )
+                            }
+                        ) {
+                            // Active Track
+                            drawRect(
+                                color = colors.activeTrackColor,
+                                topLeft = Offset(0f, 0f),
+                                size = Size(activeTrackEnd, size.height)
+                            )
+                            // Inactive Track
+                            drawRect(
+                                color = colors.inactiveTrackColor,
+                                topLeft = Offset(inactiveTrackStart, 0f),
+                                size = Size(size.width - inactiveTrackStart, size.height)
+                            )
+                        }
+
+                        val yOffset = size.height / 2 - IconSize.toSize().height / 2
+                        val iconOffset = Offset(iconPadding.toPx(), yOffset)
+
+                        if (activeIconAlpha.value > 0f) {
+                            trackIcon(iconOffset, activeIconColor, activeIconAlpha.value)
+                        }
+                        if (inactiveIconAlpha.value > 0f) {
+                            trackIcon(iconOffset, inactiveIconColor, inactiveIconAlpha.value)
+                        }
+                    }
                 }
             },
         )
 
-        if (hasAutoBrightness) {
+        if (hasAutoBrightness && isNestUI) {
             Spacer(modifier = Modifier.width(10.dp))
             drawAutoBrightnessButton(autoMode = autoMode, onIconClick = onIconClick)
         }
@@ -340,11 +420,11 @@ fun BrightnessSlider(
     }
 }
 
-private fun Modifier.sliderBackground(color: Color) = drawWithCache {
-    val offsetAround = SliderBackgroundFrameSize.toSize()
+private fun Modifier.sliderBackground(color: Color, frameSize: DpSize, roundedCorner: Dp) = drawWithCache {
+    val offsetAround = frameSize.toSize()
     val newSize = Size(size.width + 2 * offsetAround.width, size.height + 2 * offsetAround.height)
     val offset = Offset(-offsetAround.width, -offsetAround.height)
-    val cornerRadius = CornerRadius(SliderBackgroundRoundedCorner.toPx())
+    val cornerRadius = CornerRadius(roundedCorner.toPx())
     onDrawBehind {
         drawRoundRect(color = color, topLeft = offset, size = newSize, cornerRadius = cornerRadius)
     }
@@ -422,10 +502,15 @@ fun BrightnessSliderContainer(
             if (dragging) containerColors.mirrorColor else containerColors.idleColor
         )
 
+    val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
+    val sliderBackgroundFrameSize = if (isNestUI) DpSize(0.dp, 0.dp) else DpSize(10.dp, 6.dp)
+    val sliderBackgroundRoundedCorner = if (isNestUI) 1000.dp else 12.dp
+    val sliderTrackRoundedCorner = if (isNestUI) 1000.dp else 12.dp
+
     Box(
         modifier =
             modifier
-                .padding(vertical = { SliderBackgroundFrameSize.height.roundToPx() })
+                .padding(vertical = { sliderBackgroundFrameSize.height.roundToPx() })
                 .fillMaxWidth()
                 .sysuiResTag("brightness_slider")
     ) {
@@ -451,10 +536,10 @@ fun BrightnessSliderContainer(
             modifier =
                 Modifier.borderOnFocus(
                         color = MaterialTheme.colorScheme.secondary,
-                        cornerSize = CornerSize(SliderTrackRoundedCorner),
+                        cornerSize = CornerSize(sliderTrackRoundedCorner),
                     )
                     .then(if (viewModel.showMirror) Modifier.drawInOverlay() else Modifier)
-                    .sliderBackground(containerColor)
+                    .sliderBackground(containerColor, sliderBackgroundFrameSize, sliderBackgroundRoundedCorner)
                     .fillMaxWidth()
                     .pointerInteropFilter {
                         if (

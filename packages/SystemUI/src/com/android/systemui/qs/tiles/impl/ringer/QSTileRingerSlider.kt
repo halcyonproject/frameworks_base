@@ -26,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.android.systemui.common.ringer.RingerSliderWidget
 import com.android.systemui.common.ringer.RingerModeInteractorImpl
 import com.android.systemui.res.R
@@ -42,23 +44,35 @@ fun QSTileRingerSlider(
         RingerModeInteractorImpl(context, audioManager, notificationManager)
     }
     
+    val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
+    
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val spacing = dimensionResource(R.dimen.qs_tile_margin_horizontal)
-        val tileHeight = with(LocalDensity.current) {
-            val heightPx = (maxWidth.toPx() / 2) - (spacing.toPx() / 2)
-            heightPx.toDp()
+        val tileHeight = if (isNestUI) {
+            with(LocalDensity.current) {
+                val heightPx = (maxWidth.toPx() / 2) - (spacing.toPx() / 2)
+                heightPx.toDp()
+            }
+        } else {
+            64.dp
+        }
+        val shape = if (isNestUI) {
+            RoundedCornerShape(1000.dp)
+        } else {
+            RoundedCornerShape(24.dp)
         }
         
         RingerSliderWidget(
             interactor = interactor,
             theme = QSTileRingerTheme(),
             dimens = QSTileRingerDimens(tileHeight),
-        modifier = Modifier.fillMaxWidth(),
-        isDozing = false,
-        border = border,
-        onLongClick = {
-            interactor.toggleDnd()
-        }
-    )
+            modifier = Modifier.fillMaxWidth(),
+            isDozing = false,
+            border = border,
+            shape = shape,
+            onLongClick = {
+                interactor.toggleDnd()
+            }
+        )
     }
 }

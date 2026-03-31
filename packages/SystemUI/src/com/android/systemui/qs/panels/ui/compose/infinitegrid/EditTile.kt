@@ -1330,6 +1330,7 @@ fun EditTile(
 ) {
     val iconSizeDiff = CommonTileDefaults.IconSize - CommonTileDefaults.LargeTileIconSize
     val containerAlpha by animateFloatAsState(if (tileState == TileState.GreyedOut) .4f else 1f)
+    val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
     Row(
         horizontalArrangement = spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -1347,13 +1348,20 @@ fun EditTile(
 
                     val startPadding =
                         if (currentProgress == 0f) {
-                            // Find the center of the max width when the tile is icon only
-                            (constraints.maxWidth - constraints.maxHeight) / 2f
+                            if (isNestUI) {
+                                // Find the center of the max width when the tile is icon only
+                                (constraints.maxWidth - constraints.maxHeight) / 2f
+                            } else {
+                                iconHorizontalCenter(constraints.maxWidth)
+                            }
                         } else {
                             // Find the center of the minimum width to hold the same position as the
                             // tile is resized.
-                            val basePadding =
+                            val basePadding = if (isNestUI) {
                                 min?.let { (it - constraints.maxHeight) / 2f } ?: 0f
+                            } else {
+                                min?.let { iconHorizontalCenter(it.roundToInt()) } ?: 0f
+                            }
                             // Large tiles, represented with a progress of 1f, have a 0.dp padding
                             basePadding * (1f - currentProgress)
                         }
@@ -1366,10 +1374,26 @@ fun EditTile(
                 .graphicsLayer { this.alpha = containerAlpha },
     ) {
         // Icon
-        Box(
-            modifier = Modifier.fillMaxHeight().aspectRatio(1f),
-            contentAlignment = Alignment.Center,
-        ) {
+        if (isNestUI) {
+            Box(
+                modifier = Modifier.fillMaxHeight().aspectRatio(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    Modifier.size(ToggleTargetSize).thenIf(tile.isDualTarget) {
+                        Modifier.drawBehind { drawCircle(colors.iconBackground, alpha = progress()) }
+                    }
+                ) {
+                    SmallTileContent(
+                        iconProvider = { tile.icon },
+                        color = colors.icon,
+                        animateToEnd = true,
+                        size = { CommonTileDefaults.IconSize - iconSizeDiff * progress() },
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                }
+            }
+        } else {
             Box(
                 Modifier.size(ToggleTargetSize).thenIf(tile.isDualTarget) {
                     Modifier.drawBehind { drawCircle(colors.iconBackground, alpha = progress()) }
@@ -1398,6 +1422,11 @@ fun EditTile(
 private fun Modifier.tileBackground(color: () -> Color): Modifier {
     // Clip tile contents from overflowing past the tile
     return clip(RoundedCornerShape(InactiveCornerRadius)).drawBehind { drawRect(color()) }
+}
+
+private fun MeasureScope.iconHorizontalCenter(containerSize: Int): Float {
+    return (containerSize - ToggleTargetSize.roundToPx()) / 2f -
+        CommonTileDefaults.TileStartPadding.toPx()
 }
 
 private object EditModeTileDefaults {
