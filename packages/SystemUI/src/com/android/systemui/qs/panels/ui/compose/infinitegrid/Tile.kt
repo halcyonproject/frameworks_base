@@ -86,6 +86,7 @@ import com.android.systemui.compose.modifiers.sysuiResTag
 import com.android.systemui.haptics.msdl.qs.TileHapticsViewModel
 import com.android.systemui.lifecycle.rememberViewModel
 import com.android.systemui.qs.flags.QsDetailedView
+import com.android.systemui.qs.panels.style.LocalNestUiQsStyle
 import com.android.systemui.qs.panels.ui.compose.BounceableInfo
 import com.android.systemui.qs.panels.ui.compose.Tooltip
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.ActiveIconCornerRadius
@@ -233,7 +234,13 @@ fun ContentScope.Tile(
                             tileShape.topEnd,
                         )
                         .sysuiResTag("tile_expandable")
-                        .fillMaxWidth()
+                        .then(
+                            if (LocalNestUiQsStyle.current && iconOnly) {
+                                Modifier.size(TileHeight)
+                            } else {
+                                Modifier.fillMaxWidth()
+                            }
+                        )
                         .bounceable(
                             currentBounceableInfo.bounceable,
                             currentBounceableInfo.previousTile,
@@ -391,11 +398,17 @@ fun TileContainer(
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
+    val isNestUi = LocalNestUiQsStyle.current
     Box(
         modifier =
             modifier
-                .height(TileHeight)
-                .fillMaxWidth()
+                .then(
+                    if (isNestUi && iconOnly) {
+                        Modifier.size(TileHeight)
+                    } else {
+                        Modifier.height(TileHeight).fillMaxWidth()
+                    }
+                )
                 .tileCombinedClickable(
                     onClick = onClick ?: {},
                     onLongClick = onLongClick,
@@ -628,8 +641,14 @@ private object TileDefaults {
         }
     }
 
+    private val NestUiCircleOrPillShape: State<RoundedCornerShape> =
+        mutableStateOf(RoundedCornerShape(50))
+
     @Composable
     fun animateIconShapeAsState(uiState: TileUiState): State<RoundedCornerShape> {
+        if (LocalNestUiQsStyle.current) {
+            return NestUiCircleOrPillShape
+        }
         return animateShapeAsState(
             targetValue = iconRadius(uiState),
             label = "QSTileIconCornerRadius",
@@ -638,6 +657,9 @@ private object TileDefaults {
 
     @Composable
     fun animateTileShapeAsState(uiState: TileUiState): State<RoundedCornerShape> {
+        if (LocalNestUiQsStyle.current) {
+            return NestUiCircleOrPillShape
+        }
         return animateShapeAsState(targetValue = tileRadius(uiState), label = "QSTileCornerRadius")
     }
 

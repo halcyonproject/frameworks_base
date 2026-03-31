@@ -111,8 +111,10 @@ import com.android.compose.theme.PlatformTheme
 import com.android.systemui.Dumpable
 import com.android.systemui.Flags
 import com.android.systemui.Flags.notificationShadeBlur
+import com.android.systemui.brightness.ui.compose.AutoBrightnessController
 import com.android.systemui.brightness.ui.compose.BrightnessSliderContainer
 import com.android.systemui.brightness.ui.compose.ContainerColors
+import com.android.systemui.brightness.ui.compose.LocalAutoBrightnessController
 import com.android.systemui.compose.modifiers.sysUiResTagContainer
 import com.android.systemui.compose.modifiers.sysuiResTag
 import com.android.systemui.dagger.qualifiers.Background
@@ -142,6 +144,8 @@ import com.android.systemui.qs.composefragment.ui.toEditMode
 import com.android.systemui.qs.composefragment.viewmodel.QSFragmentComposeViewModel
 import com.android.systemui.qs.footer.ui.compose.FooterActions
 import com.android.systemui.qs.panels.shared.model.QSFragmentComposeClippingTableLog
+import com.android.systemui.qs.panels.style.LocalNestUiQsStyle
+import com.android.systemui.qs.panels.style.NestUiQsStyle
 import com.android.systemui.qs.panels.ui.compose.EditMode
 import com.android.systemui.qs.panels.ui.compose.QuickQuickSettings
 import com.android.systemui.qs.panels.ui.compose.TileGrid
@@ -181,6 +185,8 @@ constructor(
     private val dumpManager: DumpManager,
     @Background private val backgroundDispatcher: CoroutineDispatcher,
     @ShadeDisplayAware private val configurationController: ConfigurationController,
+    private val nestUiQsStyle: NestUiQsStyle,
+    private val autoBrightnessController: AutoBrightnessController,
 ) : LifecycleFragment(), QS, Dumpable {
 
     private val scrollListener = MutableStateFlow<QS.ScrollListener?>(null)
@@ -229,7 +235,13 @@ constructor(
                     repeatOnLifecycle(Lifecycle.State.CREATED) {
                         initOnBackPressedDispatcherOwner(this@repeatWhenAttached.lifecycle)
                         setContent {
-                            this@QSFragmentCompose.Content(Modifier.sysUiResTagContainer())
+                            val isNestUi by nestUiQsStyle.isNestUi.collectAsStateWithLifecycle()
+                            CompositionLocalProvider(
+                                LocalNestUiQsStyle provides isNestUi,
+                                LocalAutoBrightnessController provides autoBrightnessController,
+                            ) {
+                                this@QSFragmentCompose.Content(Modifier.sysUiResTagContainer())
+                            }
                         }
                     }
                 }
@@ -758,6 +770,34 @@ constructor(
                         }
                     }
 
+                val isNestUi = LocalNestUiQsStyle.current
+                val BrightnessSlider =
+                    @Composable {
+                        Element(Elements.BrightnessSlider, Modifier.fillMaxWidth()) {
+                            Box(
+                                Modifier.systemGestureExclusionInShade(
+                                    enabled = {
+                                        layoutState.transitionState is TransitionState.Idle &&
+                                            viewModel.isNotTransitioning
+                                    }
+                                )
+                            ) {
+                                AlwaysDarkMode {
+                                    BrightnessSliderContainer(
+                                        viewModel =
+                                            viewModel.containerViewModel.brightnessSliderViewModel,
+                                        containerColors =
+                                            ContainerColors(
+                                                Color.Transparent,
+                                                ContainerColors.defaultContainerColor,
+                                            ),
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                 if (viewModel.isQsEnabled) {
                     Box(
                         modifier =
@@ -772,6 +812,12 @@ constructor(
                             tiles = Tiles,
                             media = Media,
                             mediaInRow = viewModel.qqsMediaInRow,
+                            brightness =
+                                if (isNestUi && viewModel.isBrightnessSliderVisible) {
+                                    { BrightnessSlider() }
+                                } else {
+                                    null
+                                },
                         )
                     }
                 }
@@ -1423,19 +1469,40 @@ fun QuickQuickSettingsLayout(
     tiles: @Composable () -> Unit,
     media: @Composable () -> Unit,
     mediaInRow: Boolean,
+    brightness: (@Composable () -> Unit)? = null,
 ) {
+    val isNestUi = LocalNestUiQsStyle.current
     if (mediaInRow) {
-        Row(
-            horizontalArrangement = spacedBy(QuickSettingsShade.Dimensions.HorizontalPadding),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(modifier = Modifier.weight(1f)) { tiles() }
-            Box(modifier = Modifier.weight(1f)) { media() }
+        if (isNestUi && brightness != null) {
+            Column(
+                verticalArrangement = spacedBy(QuickSettingsShade.Dimensions.VerticalPadding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Row(
+                    horizontalArrangement = spacedBy(QuickSettingsShade.Dimensions.HorizontalPadding),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(modifier = Modifier.weight(1f)) { tiles() }
+                    Box(modifier = Modifier.weight(1f)) { media() }
+                }
+                brightness()
+            }
+        } else {
+            Row(
+                horizontalArrangement = spacedBy(QuickSettingsShade.Dimensions.HorizontalPadding),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(modifier = Modifier.weight(1f)) { tiles() }
+                Box(modifier = Modifier.weight(1f)) { media() }
+            }
         }
     } else {
         Column(verticalArrangement = spacedBy(dimensionResource(R.dimen.qs_tile_margin_vertical))) {
             tiles()
             media()
+            if (isNestUi && brightness != null) {
+                brightness()
+            }
         }
     }
 }
@@ -1449,12 +1516,15 @@ fun QuickSettingsLayout(
     media: @Composable () -> Unit,
     mediaInRow: Boolean,
 ) {
+    val isNestUi = LocalNestUiQsStyle.current
     if (mediaInRow) {
         Column(
             verticalArrangement = spacedBy(QuickSettingsShade.Dimensions.VerticalPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            brightness()
+            if (!isNestUi) {
+                brightness()
+            }
             Row(
                 horizontalArrangement = spacedBy(QuickSettingsShade.Dimensions.HorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1462,15 +1532,23 @@ fun QuickSettingsLayout(
                 Box(modifier = Modifier.weight(1f)) { tiles() }
                 Box(modifier = Modifier.weight(1f)) { media() }
             }
+            if (isNestUi) {
+                brightness()
+            }
         }
     } else {
         Column(
             verticalArrangement = spacedBy(QuickSettingsShade.Dimensions.VerticalPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            brightness()
+            if (!isNestUi) {
+                brightness()
+            }
             tiles()
             media()
+            if (isNestUi) {
+                brightness()
+            }
         }
     }
 }

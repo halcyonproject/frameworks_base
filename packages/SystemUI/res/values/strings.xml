@@ -950,6 +950,13 @@
     <!-- Content description of the display brightness slider (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_brightness">Display brightness</string>
 
+    <!-- Content description of the auto-brightness button. [CHAR LIMIT=NONE] -->
+    <string name="accessibility_quick_settings_auto_brightness">Auto-brightness</string>
+    <!-- State description for auto-brightness on [CHAR LIMIT=NONE] -->
+    <string name="accessibility_auto_brightness_on">On</string>
+    <!-- State description for auto-brightness off [CHAR LIMIT=NONE] -->
+    <string name="accessibility_auto_brightness_off">Off</string>
+
     <!-- Content description for AV chip when camera is in use.-->
     <string name="accessibility_camera_in_use">Camera in use</string>
     <!-- Content description for AV chip when microphone is in use.-->

@@ -96,6 +96,7 @@ import com.android.systemui.common.ui.compose.Icon
 import com.android.systemui.common.ui.compose.load
 import com.android.systemui.compose.modifiers.sysuiResTag
 import com.android.systemui.flags.DesktopSizing
+import com.android.systemui.qs.panels.style.LocalNestUiQsStyle
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.SideIconHeight
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.SideIconWidth
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.TILE_INITIAL_DELAY_MILLIS
@@ -132,6 +133,8 @@ fun LargeTileContent(
     onLongClick: (() -> Unit)? = null,
 ) {
     val isDualTarget = toggleClick != null
+    val isNestUi = LocalNestUiQsStyle.current
+    val effectiveIconShape = if (isNestUi) RoundedCornerShape(50) else iconShape
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = tileHorizontalArrangement(),
@@ -145,8 +148,8 @@ fun LargeTileContent(
         Box(
             modifier =
                 Modifier.size(CommonTileDefaults.ToggleTargetSize).thenIf(isDualTarget) {
-                    Modifier.borderOnFocus(color = focusBorderColor, iconShape.topEnd)
-                        .clip(iconShape)
+                    Modifier.borderOnFocus(color = focusBorderColor, effectiveIconShape.topEnd)
+                        .clip(effectiveIconShape)
                         .drawBehind { drawRect(animatedBackgroundColor) }
                         // apply the squish effect after the bg is drawn
                         .verticalSquish(squishiness)
@@ -375,9 +378,15 @@ fun Modifier.tileTestTag(iconOnly: Boolean): Modifier {
  */
 @Composable
 fun Modifier.largeTilePadding(isDualTarget: Boolean = false): Modifier {
+    val isNestUi = LocalNestUiQsStyle.current
     return padding(
         start = CommonTileDefaults.StartPadding,
-        end = if (isDualTarget) CommonTileDefaults.DualTargetEndPadding else TileEndPadding,
+        end = if (isNestUi) {
+            if (isDualTarget) dimensionResource(R.dimen.nestui_qs_tile_large_dual_target_end_padding)
+            else dimensionResource(R.dimen.nestui_qs_tile_large_end_padding)
+        } else {
+            if (isDualTarget) CommonTileDefaults.DualTargetEndPadding else TileEndPadding
+        },
     )
 }
 

@@ -171,6 +171,7 @@ import com.android.systemui.qs.panels.ui.compose.DragAndDropState
 import com.android.systemui.qs.panels.ui.compose.DragType
 import com.android.systemui.qs.panels.ui.compose.EditTileListState
 import com.android.systemui.qs.panels.ui.compose.EditTileListState.Companion.INVALID_INDEX
+import com.android.systemui.qs.panels.style.LocalNestUiQsStyle
 import com.android.systemui.qs.panels.ui.compose.dragAndDropRemoveZone
 import com.android.systemui.qs.panels.ui.compose.dragAndDropTileList
 import com.android.systemui.qs.panels.ui.compose.dragAndDropTileSource
@@ -864,6 +865,7 @@ fun LazyGridScope.EditTiles(
         when (cell) {
             is TileGridCell ->
                 if (listState.isMoving(cell.tile.tileSpec)) {
+                    val isNestUi = LocalNestUiQsStyle.current
                     // If the tile is being moved, replace it with a visible spacer
                     SpacerGridCell(
                         Modifier.background(
@@ -871,7 +873,10 @@ fun LazyGridScope.EditTiles(
                                 MaterialTheme.colorScheme.secondary.copy(
                                     alpha = EditModeTileDefaults.PLACEHOLDER_ALPHA
                                 ),
-                            shape = RoundedCornerShape(InactiveTileCornerRadius),
+                            shape =
+                                RoundedCornerShape(
+                                    if (isNestUi) TileHeight / 2 else InactiveTileCornerRadius
+                                ),
                         )
                     )
                 } else {
@@ -1077,11 +1082,14 @@ private fun LazyGridItemScope.TileGridCell(
                 }
                 .borderOnFocus(
                     MaterialTheme.colorScheme.secondary,
-                    CornerSize(InactiveTileCornerRadius),
+                    if (LocalNestUiQsStyle.current) CornerSize(50)
+                    else CornerSize(InactiveTileCornerRadius),
                 )
                 .thenIf(isSelectable) { draggableModifier }
                 .tileBackground(
-                    cornerRadius = InactiveTileCornerRadius,
+                    cornerRadius =
+                        if (LocalNestUiQsStyle.current) TileHeight / 2
+                        else InactiveTileCornerRadius,
                     alpha = { containerAlpha },
                     color = { colors.background },
                 )
@@ -1179,9 +1187,16 @@ private fun AvailableTileGridCell(
                     .fillMaxSize()
                     .borderOnFocus(
                         MaterialTheme.colorScheme.secondary,
-                        CornerSize(InactiveTileCornerRadius),
+                        if (LocalNestUiQsStyle.current) CornerSize(50)
+                        else CornerSize(InactiveTileCornerRadius),
                     )
-                    .tileBackground(cornerRadius = InactiveTileCornerRadius) { colors.background }
+                    .tileBackground(
+                        cornerRadius =
+                            if (LocalNestUiQsStyle.current) TileHeight / 2
+                            else InactiveTileCornerRadius
+                    ) {
+                        colors.background
+                    }
                     .clickable(
                         enabled = !cell.isCurrent,
                         onClick = onClick,

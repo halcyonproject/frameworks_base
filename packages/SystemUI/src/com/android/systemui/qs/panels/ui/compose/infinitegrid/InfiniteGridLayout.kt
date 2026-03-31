@@ -16,6 +16,8 @@
 
 package com.android.systemui.qs.panels.ui.compose.infinitegrid
 
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.compose.animation.scene.ContentScope
@@ -37,10 +40,12 @@ import com.android.systemui.grid.ui.compose.VerticalSpannedGrid
 import com.android.systemui.haptics.msdl.qs.TileHapticsViewModel
 import com.android.systemui.lifecycle.rememberViewModel
 import com.android.systemui.qs.panels.shared.model.SizedTileImpl
+import com.android.systemui.qs.panels.style.LocalNestUiQsStyle
 import com.android.systemui.qs.panels.ui.compose.EditTileListState
 import com.android.systemui.qs.panels.ui.compose.PaginatableGridLayout
 import com.android.systemui.qs.panels.ui.compose.TileListener
 import com.android.systemui.qs.panels.ui.compose.bounceableInfo
+import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.TileHeight
 import com.android.systemui.qs.panels.ui.viewmodel.BounceableTileViewModel
 import com.android.systemui.qs.panels.ui.viewmodel.DetailsViewModel
 import com.android.systemui.qs.panels.ui.viewmodel.EditTileViewModel
@@ -100,37 +105,59 @@ constructor(
         val bounceables =
             remember(sizedTiles) { List(sizedTiles.size) { BounceableTileViewModel() } }
         val spans by remember(sizedTiles) { derivedStateOf { sizedTiles.fastMap { it.width } } }
-        VerticalSpannedGrid(
-            columns = columns,
-            columnSpacing = dimensionResource(R.dimen.qs_tile_margin_horizontal),
-            rowSpacing = dimensionResource(R.dimen.qs_tile_margin_vertical),
-            spans = spans,
-            keys = { sizedTiles[it].tile.spec },
-            modifier = modifier,
-        ) { spanIndex, column, isFirstInColumn, isLastInColumn ->
-            val it = sizedTiles[spanIndex]
+        val isNestUi = LocalNestUiQsStyle.current
+        BoxWithConstraints(modifier = modifier) {
+            val totalWidth = maxWidth
+            val columnSpacing =
+                if (isNestUi && columns == 4) {
+                    val tileHeight = TileHeight
+                    val computedGap = (totalWidth - tileHeight * 4) / 3
+                    if (computedGap >= 8.dp) computedGap
+                    else dimensionResource(R.dimen.nestui_qs_tile_margin_horizontal)
+                } else if (isNestUi) {
+                    dimensionResource(R.dimen.nestui_qs_tile_margin_horizontal)
+                } else {
+                    dimensionResource(R.dimen.qs_tile_margin_horizontal)
+                }
+            val rowSpacing =
+                if (isNestUi) {
+                    dimensionResource(R.dimen.nestui_qs_tile_margin_vertical)
+                } else {
+                    dimensionResource(R.dimen.qs_tile_margin_vertical)
+                }
 
-            Element(it.tile.spec.toElementKey(), Modifier) {
-                Tile(
-                    tile = it.tile,
-                    iconOnly = iconTilesViewModel.isIconTile(it.tile.spec),
-                    squishiness = { squishiness },
-                    tileHapticsViewModelFactory = tileHapticsViewModelFactory,
-                    coroutineScope = scope,
-                    bounceableInfo =
-                        bounceables.bounceableInfo(
-                            it,
-                            index = spanIndex,
-                            column = column,
-                            columns = columns,
-                            isFirstInRow = isFirstInColumn,
-                            isLastInRow = isLastInColumn,
-                        ),
-                    detailsViewModel = detailsViewModel,
-                    isVisible = listening,
-                    requestToggleTextFeedback = textFeedbackViewModel::requestShowFeedback,
-                    enableRevealEffect = enableRevealEffect,
-                )
+            VerticalSpannedGrid(
+                columns = columns,
+                columnSpacing = columnSpacing,
+                rowSpacing = rowSpacing,
+                spans = spans,
+                keys = { sizedTiles[it].tile.spec },
+                modifier = Modifier.fillMaxWidth(),
+            ) { spanIndex, column, isFirstInColumn, isLastInColumn ->
+                val it = sizedTiles[spanIndex]
+
+                Element(it.tile.spec.toElementKey(), Modifier) {
+                    Tile(
+                        tile = it.tile,
+                        iconOnly = iconTilesViewModel.isIconTile(it.tile.spec),
+                        squishiness = { squishiness },
+                        tileHapticsViewModelFactory = tileHapticsViewModelFactory,
+                        coroutineScope = scope,
+                        bounceableInfo =
+                            bounceables.bounceableInfo(
+                                it,
+                                index = spanIndex,
+                                column = column,
+                                columns = columns,
+                                isFirstInRow = isFirstInColumn,
+                                isLastInRow = isLastInColumn,
+                            ),
+                        detailsViewModel = detailsViewModel,
+                        isVisible = listening,
+                        requestToggleTextFeedback = textFeedbackViewModel::requestShowFeedback,
+                        enableRevealEffect = enableRevealEffect,
+                    )
+                }
             }
         }
 

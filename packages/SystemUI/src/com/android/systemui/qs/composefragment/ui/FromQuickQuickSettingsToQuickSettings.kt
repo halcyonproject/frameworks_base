@@ -38,4 +38,7 @@ fun TransitionBuilder.quickQuickSettingsToQuickSettings(
     // overlap.
     fractionRange(end = 0.5f) { fade(SceneKeys.QqsTileElementMatcher) }
     anchoredTranslate(SceneKeys.QqsTileElementMatcher, Elements.GridAnchor)
+
+    fractionRange(end = 0.43f) { fade(Elements.BrightnessSlider) }
+    anchoredTranslate(Elements.BrightnessSlider, Elements.GridAnchor)
 }

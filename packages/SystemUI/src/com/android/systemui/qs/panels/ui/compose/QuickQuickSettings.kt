@@ -17,6 +17,8 @@
 package com.android.systemui.qs.panels.ui.compose
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -24,12 +26,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.compose.animation.scene.ContentScope
 import com.android.systemui.compose.modifiers.sysuiResTag
 import com.android.systemui.grid.ui.compose.VerticalSpannedGrid
 import com.android.systemui.qs.composefragment.ui.GridAnchor
+import com.android.systemui.qs.panels.style.LocalNestUiQsStyle
+import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.Tile
 import com.android.systemui.qs.panels.ui.viewmodel.BounceableTileViewModel
 import com.android.systemui.qs.panels.ui.viewmodel.QuickQuickSettingsViewModel
@@ -48,7 +53,27 @@ fun ContentScope.QuickQuickSettings(
     val squishiness by viewModel.squishinessViewModel.squishiness.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
-    Box(modifier = modifier) {
+    val isNestUi = LocalNestUiQsStyle.current
+    BoxWithConstraints(modifier = modifier) {
+        val totalWidth = maxWidth
+        val columnSpacing =
+            if (isNestUi && columns == 4) {
+                val tileHeight = CommonTileDefaults.TileHeight
+                val computedGap = (totalWidth - tileHeight * 4) / 3
+                if (computedGap >= 8.dp) computedGap
+                else dimensionResource(R.dimen.nestui_qs_tile_margin_horizontal)
+            } else if (isNestUi) {
+                dimensionResource(R.dimen.nestui_qs_tile_margin_horizontal)
+            } else {
+                dimensionResource(R.dimen.qs_tile_margin_horizontal)
+            }
+        val rowSpacing =
+            if (isNestUi) {
+                dimensionResource(R.dimen.nestui_qs_tile_margin_vertical)
+            } else {
+                dimensionResource(R.dimen.qs_tile_margin_vertical)
+            }
+
         GridAnchor()
 
         val bounceables =
@@ -56,10 +81,10 @@ fun ContentScope.QuickQuickSettings(
         val spans by remember(sizedTiles) { derivedStateOf { sizedTiles.fastMap { it.width } } }
         VerticalSpannedGrid(
             columns = columns,
-            columnSpacing = dimensionResource(R.dimen.qs_tile_margin_horizontal),
-            rowSpacing = dimensionResource(R.dimen.qs_tile_margin_vertical),
+            columnSpacing = columnSpacing,
+            rowSpacing = rowSpacing,
             spans = spans,
-            modifier = Modifier.sysuiResTag("qqs_tile_layout"),
+            modifier = Modifier.fillMaxWidth().sysuiResTag("qqs_tile_layout"),
             keys = { sizedTiles[it].tile.spec },
         ) { spanIndex, column, isFirstInColumn, isLastInColumn ->
             val it = sizedTiles[spanIndex]

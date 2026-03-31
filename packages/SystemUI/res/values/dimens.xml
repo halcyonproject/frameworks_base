@@ -705,6 +705,14 @@
     <dimen name="qs_corner_radius">28dp</dimen>
     <dimen name="qs_tile_margin_horizontal">8dp</dimen>
     <dimen name="qs_tile_margin_vertical">@dimen/qs_tile_margin_horizontal</dimen>
+
+    <!-- NestUI Quick Settings style dimens -->
+    <dimen name="nestui_qs_tile_margin_horizontal">22dp</dimen>
+    <dimen name="nestui_qs_tile_margin_vertical">14dp</dimen>
+    <dimen name="nestui_qs_tile_large_end_padding">16dp</dimen>
+    <dimen name="nestui_qs_tile_large_dual_target_end_padding">12dp</dimen>
+    <dimen name="nestui_brightness_slider_height">46dp</dimen>
+    <dimen name="nestui_auto_brightness_button_size">46dp</dimen>
     <dimen name="qs_brightness_margin_top">8dp</dimen>
     <dimen name="brightness_dialog_expanded_width">364dp</dimen>
     <dimen name="brightness_dialog_margin_end">24dp</dimen>
