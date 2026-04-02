@@ -36,6 +36,9 @@ import androidx.compose.foundation.layout.Arrangement.spacedBy
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.foundation.layout.PaddingValues
@@ -216,6 +219,7 @@ fun ContentScope.Tile(
         } else {
             with(LocalDensity.current) { 8.dp.roundToPx() }
         }
+        val tileHeightPx = with(LocalDensity.current) { TileDefaults.TileHeight.toPx() }
 
         val surfaceRevealModifier: Modifier
         val contentRevealModifier: Modifier
@@ -240,7 +244,43 @@ fun ContentScope.Tile(
                 modifier
                     .then(surfaceRevealModifier)
                     .borderOnFocus(color = MaterialTheme.colorScheme.secondary, tileShape.topEnd)
-                    .fillMaxWidth()
+                    .layout { measurable, constraints ->
+                        val height = if (isNestUI) {
+                            if (iconOnly) {
+                                (constraints.maxWidth * 2).toFloat() / 2.2f
+                            } else {
+                                (constraints.maxWidth - spacing).toFloat() / 2.2f 
+                            }
+                        } else {
+                            tileHeightPx
+                        }.toInt()
+
+                        val width = if (isNestUI && iconOnly) {
+                            height
+                        } else if (isNestUI) {
+                            // Shrink the large tile width to align with small tile edges.
+                            // Small tiles are squares centered in their cells, so we match
+                            // the inset they create on each side.
+                            val cellWidth = (constraints.maxWidth - spacing) / 2
+                            val smallTileSize = (cellWidth * 2f / 2.2f).toInt()
+                            val inset = (cellWidth - smallTileSize) / 2
+                            constraints.maxWidth - inset * 2
+                        } else {
+                            constraints.maxWidth
+                        }
+                        val placeable =
+                            measurable.measure(
+                                constraints.copy(
+                                    minWidth = width,
+                                    maxWidth = width,
+                                    minHeight = height,
+                                    maxHeight = height
+                                )
+                            )
+                        layout(constraints.maxWidth, height) {
+                            placeable.placeRelative((constraints.maxWidth - width) / 2, 0)
+                        }
+                    }
                     .thenIf(currentBounceableInfo != null) {
                         Modifier.bounceable(
                             currentBounceableInfo!!.bounceable,
@@ -319,7 +359,7 @@ fun ContentScope.Tile(
                 iconOnly = iconOnly,
                 isDualTarget = isDualTarget,
                 modifier = contentRevealModifier,
-            ) {
+            ) { maxWidth ->
                 val iconProvider: Context.() -> Icon = { getTileIcon(icon = icon) }
                 if (iconOnly) {
                     SmallTileContent(
@@ -353,8 +393,9 @@ fun ContentScope.Tile(
                         squishiness = squishiness,
                         isVisible = isVisible,
                         textScale = { contentBounceable.textBounceScale },
+                        maxWidth = maxWidth,
                         modifier =
-                            Modifier.largeTilePadding(isDualTarget = uiState.handlesLongClick),
+                            Modifier.largeTilePadding(isDualTarget = uiState.handlesLongClick, maxWidth = maxWidth),
                     )
                 }
             }
@@ -389,7 +430,7 @@ fun TileContainer(
     isDualTarget: Boolean,
     interactionSource: MutableInteractionSource?,
     modifier: Modifier = Modifier,
-    content: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.(maxWidth: Dp) -> Unit,
 ) {
     val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
     val tileHeight = TileDefaults.TileHeight
@@ -401,35 +442,33 @@ fun TileContainer(
         with(LocalDensity.current) { 8.dp.roundToPx() }
     }
 
-    Box(
-        modifier =
-            modifier
-                .thenIf(isNestUI && iconOnly) { Modifier.aspectRatio(1f) }
-                .thenIf(isNestUI && !iconOnly) {
-                    Modifier.layout { measurable, constraints ->
-                        val height = (constraints.maxWidth - spacing) / 2
-                        val placeable =
-                            measurable.measure(
-                                constraints.copy(minHeight = height, maxHeight = height)
-                            )
-                        layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
-                    }
+        Box(
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .tileCombinedClickable(
+                        onClick = onClick ?: {},
+                        onLongClick = onLongClick,
+                        accessibilityUiState = accessibilityUiState,
+                        iconOnly = iconOnly,
+                        isDualTarget = isDualTarget,
+                        interactionSource = interactionSource,
+                    )
+                    .tileTestTag(iconOnly),
+        ) {
+            BoxWithConstraints(Modifier.fillMaxSize()) {
+                val capturedMaxWidth = maxWidth
+                val rawScale =
+                    if (isNestUI) (maxHeight / 64.dp).coerceAtLeast(1f)
+                    else 1f
+                val scale = (rawScale - 1f) * 0.5f + 1f
+                CompositionLocalProvider(
+                    com.android.systemui.qs.shared.ui.LocalTileContentScale provides scale
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) { content(capturedMaxWidth) }
                 }
-                .thenIf(!isNestUI) {
-                    Modifier.height(tileHeight)
-                }
-                .fillMaxWidth()
-                .tileCombinedClickable(
-                    onClick = onClick ?: {},
-                    onLongClick = onLongClick,
-                    accessibilityUiState = accessibilityUiState,
-                    iconOnly = iconOnly,
-                    isDualTarget = isDualTarget,
-                    interactionSource = interactionSource,
-                )
-                .tileTestTag(iconOnly),
-        content = content,
-    )
+            }
+        }
 }
 
 @Composable
@@ -487,8 +526,13 @@ private fun Context.getTileIcon(icon: IconProvider): Icon {
     } ?: Icon.Resource(R.drawable.ic_error_outline, null)
 }
 
+@Composable
 fun tileHorizontalArrangement(): Arrangement.Horizontal {
-    return spacedBy(space = CommonTileDefaults.TileArrangementPadding, alignment = Alignment.Start)
+    val scale = com.android.systemui.qs.shared.ui.LocalTileContentScale.current
+    return spacedBy(
+        space = CommonTileDefaults.TileArrangementPadding * scale,
+        alignment = Alignment.Start,
+    )
 }
 
 @Composable

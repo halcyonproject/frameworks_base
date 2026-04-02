@@ -37,6 +37,7 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement.spacedBy
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -806,45 +807,57 @@ constructor(
                         val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
                         val BrightnessSlider =
                             @Composable {
-                                val content: @Composable () -> Unit =
-                                    @Composable {
-                                        Box(
-                                            Modifier.systemGestureExclusionInShade(
-                                                enabled = {
-                                                    /*
-                                                 * While we are transitioning into QS (either from QQS
-                                                 * or from gone), the global position of the brightness
-                                                 * slider will change in every frame. This causes
-                                                 * the modifier to send a new gesture exclusion
-                                                 * rectangle on every frame. Instead, only apply the
-                                                 * modifier when this is settled.
-                                                 */
-                                                    layoutState.transitionState is TransitionState.Idle &&
-                                                        viewModel.isNotTransitioning
-                                                }
-                                            )
-                                        ) {
-                                            AlwaysDarkMode {
-                                                BrightnessSliderContainer(
-                                                    viewModel =
-                                                        viewModel.containerViewModel.brightnessSliderViewModel,
-                                                    containerColors =
-                                                        ContainerColors(
-                                                            Color.Transparent,
-                                                            ContainerColors.defaultContainerColor,
-                                                        ),
-                                                    modifier = Modifier.fillMaxWidth(),
+                                BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+                                    val content: @Composable () -> Unit =
+                                        @Composable {
+                                            Box(
+                                                Modifier.systemGestureExclusionInShade(
+                                                    enabled = {
+                                                        /*
+                                                     * While we are transitioning into QS (either from QQS
+                                                     * or from gone), the global position of the brightness
+                                                     * slider will change in every frame. This causes
+                                                     * the modifier to send a new gesture exclusion
+                                                     * rectangle on every frame. Instead, only apply the
+                                                     * modifier when this is settled.
+                                                     */
+                                                        layoutState.transitionState is TransitionState.Idle &&
+                                                            viewModel.isNotTransitioning
+                                                    }
                                                 )
+                                            ) {
+                                                AlwaysDarkMode {
+                                                    BrightnessSliderContainer(
+                                                        viewModel =
+                                                            viewModel.containerViewModel.brightnessSliderViewModel,
+                                                        containerColors =
+                                                            ContainerColors(
+                                                                Color.Transparent,
+                                                                ContainerColors.defaultContainerColor,
+                                                            ),
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                    )
+                                                }
                                             }
                                         }
+
+                                    val horizontalPadding = if (isNestUI) {
+                                        val spacing = dimensionResource(R.dimen.qs_tile_margin_horizontal)
+                                        val cellWidth = (maxWidth - spacing) / 2
+                                        val smallTileSize = cellWidth * 2f / 2.2f
+                                        (cellWidth - smallTileSize) / 2
+                                    } else {
+                                        0.dp
                                     }
-                                if (isNestUI) {
-                                    Element(Elements.BrightnessSlider, modifier = modifier) {
-                                        content()
-                                    }
-                                } else {
-                                    Box(modifier = modifier) {
-                                        content()
+
+                                    if (isNestUI) {
+                                        Element(Elements.BrightnessSlider, modifier = Modifier.padding(horizontal = horizontalPadding)) {
+                                            content()
+                                        }
+                                    } else {
+                                        Box(modifier = Modifier) {
+                                            content()
+                                        }
                                     }
                                 }
                             }
@@ -917,45 +930,57 @@ constructor(
                         val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
                         val BrightnessSlider =
                             @Composable {
-                                val content: @Composable () -> Unit =
-                                    @Composable {
-                                        Box(
-                                            Modifier.systemGestureExclusionInShade(
-                                                enabled = {
-                                                    /*
-                                                 * While we are transitioning into QS (either from QQS
-                                                 * or from gone), the global position of the brightness
-                                                 * slider will change in every frame. This causes
-                                                 * the modifier to send a new gesture exclusion
-                                                 * rectangle on every frame. Instead, only apply the
-                                                 * modifier when this is settled.
-                                                 */
-                                                    layoutState.transitionState is TransitionState.Idle &&
-                                                        viewModel.isNotTransitioning
-                                                }
-                                            )
-                                        ) {
-                                            AlwaysDarkMode {
-                                                BrightnessSliderContainer(
-                                                    viewModel =
-                                                        containerViewModel.brightnessSliderViewModel,
-                                                    containerColors =
-                                                        ContainerColors(
-                                                            Color.Transparent,
-                                                            ContainerColors.defaultContainerColor,
-                                                        ),
-                                                    modifier = Modifier.fillMaxWidth(),
+                                BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+                                    val content: @Composable () -> Unit =
+                                        @Composable {
+                                            Box(
+                                                Modifier.systemGestureExclusionInShade(
+                                                    enabled = {
+                                                        /*
+                                                     * While we are transitioning into QS (either from QQS
+                                                     * or from gone), the global position of the brightness
+                                                     * slider will change in every frame. This causes
+                                                     * the modifier to send a new gesture exclusion
+                                                     * rectangle on every frame. Instead, only apply the
+                                                     * modifier when this is settled.
+                                                     */
+                                                        layoutState.transitionState is TransitionState.Idle &&
+                                                            viewModel.isNotTransitioning
+                                                    }
                                                 )
+                                            ) {
+                                                AlwaysDarkMode {
+                                                    BrightnessSliderContainer(
+                                                        viewModel =
+                                                            containerViewModel.brightnessSliderViewModel,
+                                                        containerColors =
+                                                            ContainerColors(
+                                                                Color.Transparent,
+                                                                ContainerColors.defaultContainerColor,
+                                                            ),
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                    )
+                                                }
                                             }
                                         }
+
+                                    val horizontalPadding = if (isNestUI) {
+                                        val spacing = dimensionResource(R.dimen.qs_tile_margin_horizontal)
+                                        val cellWidth = (maxWidth - spacing) / 2
+                                        val smallTileSize = cellWidth * 2f / 2.2f
+                                        (cellWidth - smallTileSize) / 2
+                                    } else {
+                                        0.dp
                                     }
-                                if (isNestUI) {
-                                    Element(Elements.BrightnessSlider, modifier = modifier) {
-                                        content()
-                                    }
-                                } else {
-                                    Box(modifier = modifier) {
-                                        content()
+
+                                    if (isNestUI) {
+                                        Element(Elements.BrightnessSlider, modifier = Modifier.padding(horizontal = horizontalPadding)) {
+                                            content()
+                                        }
+                                    } else {
+                                        Box(modifier = Modifier) {
+                                            content()
+                                        }
                                     }
                                 }
                             }

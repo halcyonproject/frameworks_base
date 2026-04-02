@@ -50,7 +50,7 @@ fun QSTileRingerSlider(
         val spacing = dimensionResource(R.dimen.qs_tile_margin_horizontal)
         val tileHeight = if (isNestUI) {
             with(LocalDensity.current) {
-                val heightPx = (maxWidth.toPx() / 2) - (spacing.toPx() / 2)
+                val heightPx = (maxWidth.toPx() - spacing.toPx()) / 2.2f
                 heightPx.toDp()
             }
         } else {

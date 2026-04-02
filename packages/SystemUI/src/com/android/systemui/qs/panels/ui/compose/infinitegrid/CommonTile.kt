@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -89,6 +90,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.android.compose.modifiers.size
 import com.android.compose.modifiers.thenIf
+import androidx.compose.ui.composed
+import androidx.compose.ui.res.dimensionResource
 import com.android.compose.ui.graphics.painter.rememberDrawablePainter
 import com.android.systemui.Flags
 import com.android.systemui.Flags.iconRefresh2025
@@ -96,6 +99,7 @@ import com.android.systemui.common.shared.model.Icon
 import com.android.systemui.common.ui.compose.Icon
 import com.android.systemui.common.ui.compose.load
 import com.android.systemui.compose.modifiers.sysuiResTag
+import com.android.systemui.res.R
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.SideIconHeight
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.SideIconWidth
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.TILE_INITIAL_DELAY_MILLIS
@@ -107,7 +111,6 @@ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.longPressLabelSettings
 import com.android.systemui.qs.panels.ui.viewmodel.AccessibilityUiState
 import com.android.systemui.qs.ui.compose.borderOnFocus
-import com.android.systemui.res.R
 import kotlin.math.abs
 import platform.test.motion.compose.values.MotionTestValueKey
 import platform.test.motion.compose.values.motionTestValues
@@ -131,8 +134,20 @@ fun LargeTileContent(
     textScale: () -> Float = { 1f },
     toggleClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
+    maxWidth: Dp? = null,
 ) {
     val isDualTarget = toggleClick != null
+    val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
+    val contentScale = com.android.systemui.qs.shared.ui.LocalTileContentScale.current
+    
+    // Calculate cellWidth for NestUI to center the icon in the first cell area
+    val cellWidth = if (isNestUI && maxWidth != null && maxWidth > 0.dp) {
+        val spacing = dimensionResource(R.dimen.qs_tile_margin_horizontal)
+        (maxWidth - spacing) / 2
+    } else {
+        null
+    }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = tileHorizontalArrangement(),
@@ -143,20 +158,29 @@ fun LargeTileContent(
         val animatedBackgroundColor by
             animateColorAsState(colors.iconBackground, label = "QSTileDualTargetBackgroundColor")
         val focusBorderColor = MaterialTheme.colorScheme.secondary
-        val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
         val iconContainerModifier = if (isNestUI) {
             Modifier.fillMaxHeight().aspectRatio(1f)
         } else {
             Modifier.size(CommonTileDefaults.ToggleTargetSize)
         }
 
+        val iconAreaModifier = if (cellWidth != null) {
+            Modifier.width(cellWidth)
+        } else {
+            Modifier
+        }
+
         Box(
-            modifier = iconContainerModifier,
+            modifier = iconAreaModifier,
             contentAlignment = Alignment.Center,
         ) {
             Box(
+                modifier = iconContainerModifier,
+                contentAlignment = Alignment.Center,
+            ) {
+            Box(
                 modifier =
-                    Modifier.size(CommonTileDefaults.ToggleTargetSize).thenIf(isDualTarget) {
+                    (if (isNestUI) Modifier.fillMaxSize() else Modifier.size(CommonTileDefaults.ToggleTargetSize * contentScale)).thenIf(isDualTarget) {
                         Modifier.borderOnFocus(color = focusBorderColor, iconShape.topEnd)
                             .clip(iconShape)
                             .verticalSquish(squishiness)
@@ -184,11 +208,12 @@ fun LargeTileContent(
                 SmallTileContent(
                     iconProvider = iconProvider,
                     color = colors.icon,
-                    size = { CommonTileDefaults.LargeTileIconSize },
+                    size = { CommonTileDefaults.LargeTileIconSize * contentScale },
                     modifier = Modifier.align(Alignment.Center),
                 )
             }
         }
+    }
 
         // Labels
         LargeTileLabels(
@@ -204,7 +229,7 @@ fun LargeTileContent(
             Image(
                 painter = rememberDrawablePainter(sideDrawable),
                 contentDescription = null,
-                modifier = Modifier.width(SideIconWidth).height(SideIconHeight),
+                modifier = Modifier.width(SideIconWidth * contentScale).height(SideIconHeight * contentScale),
             )
         }
     }
@@ -224,9 +249,14 @@ fun LargeTileLabels(
     val animatedSecondaryLabelColor by
         animateColorAsState(colors.secondaryLabel, label = "QSTileSecondaryLabelColor")
     Column(verticalArrangement = Arrangement.Center, modifier = modifier.fillMaxHeight()) {
+        val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
+        val contentScale = com.android.systemui.qs.shared.ui.LocalTileContentScale.current
+        val textScale = if (isNestUI) contentScale * 0.9f else contentScale
         TileLabel(
             text = label,
-            style = MaterialTheme.typography.titleSmallEmphasized,
+            style = MaterialTheme.typography.titleSmallEmphasized.copy(
+                fontSize = MaterialTheme.typography.titleSmallEmphasized.fontSize * textScale
+            ),
             color = { animatedLabelColor },
             isVisible = isVisible,
         )
@@ -234,7 +264,9 @@ fun LargeTileLabels(
             TileLabel(
                 secondaryLabel ?: "",
                 color = { animatedSecondaryLabelColor },
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontSize = MaterialTheme.typography.labelMedium.fontSize * textScale
+                ),
                 isVisible = isVisible,
                 modifier =
                     Modifier.thenIf(
@@ -253,75 +285,81 @@ fun SmallTileContent(
     iconProvider: Context.() -> Icon,
     color: Color,
     modifier: Modifier = Modifier,
-    size: () -> Dp = { CommonTileDefaults.IconSize },
+    size: (() -> Dp)? = null,
     animateToEnd: Boolean = false,
 ) {
+    val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
+    val contentScale = com.android.systemui.qs.shared.ui.LocalTileContentScale.current
+    val actualSizeLambda: () -> Dp = size ?: { CommonTileDefaults.IconSize * contentScale }
     val context = LocalContext.current
     val icon = iconProvider(context)
     val animatedColor by animateColorAsState(color, label = "QSTileIconColor")
-    val iconModifier = modifier.size({ size().roundToPx() }, { size().roundToPx() })
-    val loadedDrawable =
-        remember(icon, context) {
-            when (icon) {
-                is Icon.Loaded -> icon.drawable
-                is Icon.Resource -> context.getDrawable(icon.resId)
+
+    Box(modifier = modifier.aspectRatio(1f).fillMaxSize(), contentAlignment = Alignment.Center) {
+        val iconModifier = Modifier.size({ actualSizeLambda().roundToPx() }, { actualSizeLambda().roundToPx() })
+        val loadedDrawable =
+            remember(icon, context) {
+                when (icon) {
+                    is Icon.Loaded -> icon.drawable
+                    is Icon.Resource -> context.getDrawable(icon.resId)
+                }
             }
-        }
-    if (loadedDrawable is Animatable) {
-        // Skip initial animation, icons should animate only as the state change
-        // and not when first composed
-        var shouldSkipInitialAnimation by remember { mutableStateOf(true) }
-        LaunchedEffect(Unit) { shouldSkipInitialAnimation = animateToEnd }
+        if (loadedDrawable is Animatable) {
+            // Skip initial animation, icons should animate only as the state change
+            // and not when first composed
+            var shouldSkipInitialAnimation by remember { mutableStateOf(true) }
+            LaunchedEffect(Unit) { shouldSkipInitialAnimation = animateToEnd }
 
-        val painter =
-            when (icon) {
-                is Icon.Resource -> {
-                    val image = AnimatedImageVector.animatedVectorResource(id = icon.resId)
-                    key(icon) {
-                        var atEnd by remember(icon) { mutableStateOf(shouldSkipInitialAnimation) }
-                        LaunchedEffect(key1 = icon.resId) { atEnd = true }
+            val painter =
+                when (icon) {
+                    is Icon.Resource -> {
+                        val image = AnimatedImageVector.animatedVectorResource(id = icon.resId)
+                        key(icon) {
+                            var atEnd by remember(icon) { mutableStateOf(shouldSkipInitialAnimation) }
+                            LaunchedEffect(key1 = icon.resId) { atEnd = true }
 
-                        rememberAnimatedVectorPainter(animatedImageVector = image, atEnd = atEnd)
+                            rememberAnimatedVectorPainter(animatedImageVector = image, atEnd = atEnd)
+                        }
+                    }
+
+                    is Icon.Loaded -> {
+                        val painter = rememberDrawablePainter(loadedDrawable)
+
+                        // rememberDrawablePainter automatically starts the animation. Using
+                        // SideEffect here to immediately stop it if needed
+                        DisposableEffect(painter) {
+                            if (loadedDrawable is AnimatedVectorDrawable) {
+                                loadedDrawable.forceAnimationOnUI()
+                            }
+                            if (shouldSkipInitialAnimation) {
+                                loadedDrawable.stop()
+                            }
+                            onDispose {}
+                        }
+
+                        painter
                     }
                 }
 
-                is Icon.Loaded -> {
-                    val painter = rememberDrawablePainter(loadedDrawable)
-
-                    // rememberDrawablePainter automatically starts the animation. Using
-                    // SideEffect here to immediately stop it if needed
-                    DisposableEffect(painter) {
-                        if (loadedDrawable is AnimatedVectorDrawable) {
-                            loadedDrawable.forceAnimationOnUI()
-                        }
-                        if (shouldSkipInitialAnimation) {
-                            loadedDrawable.stop()
-                        }
-                        onDispose {}
-                    }
-
-                    painter
-                }
+            if (iconRefresh2025()) {
+                NonClippedImage(
+                    painter = painter,
+                    contentDescription = icon.contentDescription?.load(),
+                    colorFilter = ColorFilter.tint(color = animatedColor),
+                    modifier = iconModifier,
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Image(
+                    painter = painter,
+                    contentDescription = icon.contentDescription?.load(),
+                    colorFilter = ColorFilter.tint(color = animatedColor),
+                    modifier = iconModifier,
+                )
             }
-
-        if (iconRefresh2025()) {
-            NonClippedImage(
-                painter = painter,
-                contentDescription = icon.contentDescription?.load(),
-                colorFilter = ColorFilter.tint(color = animatedColor),
-                modifier = iconModifier,
-                contentScale = ContentScale.Crop,
-            )
         } else {
-            Image(
-                painter = painter,
-                contentDescription = icon.contentDescription?.load(),
-                colorFilter = ColorFilter.tint(color = animatedColor),
-                modifier = iconModifier,
-            )
+            Icon(icon = icon, tint = animatedColor, modifier = iconModifier)
         }
-    } else {
-        Icon(icon = icon, tint = animatedColor, modifier = iconModifier)
     }
 }
 
@@ -382,17 +420,19 @@ fun Modifier.tileTestTag(iconOnly: Boolean): Modifier {
     return sysuiResTag(if (iconOnly) TEST_TAG_SMALL else TEST_TAG_LARGE)
 }
 
-/**
- * Adds padding to a large tile, differentiating between start and end padding depending on whether
- * it's a dual target tile or if it has a side drawable.
- */
-@Composable
-fun Modifier.largeTilePadding(isDualTarget: Boolean = false): Modifier {
+fun Modifier.largeTilePadding(isDualTarget: Boolean = true, maxWidth: Dp? = null): Modifier = composed {
     val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
-    return padding(
-        start = if (isNestUI) 0.dp else CommonTileDefaults.TileStartPadding,
-        end = if (isDualTarget) TileDualTargetEndPadding else TileEndPadding,
-    )
+    val contentScale = if (isNestUI) com.android.systemui.qs.shared.ui.LocalTileContentScale.current else 1f
+    
+    val start = if (isNestUI) {
+        0.dp
+    } else {
+        CommonTileDefaults.TileStartPadding * contentScale
+    }
+    
+    val end = (if (isDualTarget) CommonTileDefaults.TileDualTargetEndPadding else CommonTileDefaults.TileEndPadding) * contentScale
+    val vertical = 6.dp * contentScale
+    this.padding(start = start, end = end, top = vertical, bottom = vertical)
 }
 
 private fun DrawScope.drawFadedEdge(startX: Float, endX: Float, colors: List<Color>) {

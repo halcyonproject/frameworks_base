@@ -34,6 +34,7 @@ import android.os.UserHandle
 const val SETTINGS_NESTUI_QS = "nestui_qs_panel"
 
 val LocalIsNestUIEnabled = compositionLocalOf { true }
+val LocalTileContentScale = compositionLocalOf { 1f }
 
 @Composable
 fun rememberIsNestUIEnabled(context: Context): Boolean {

@@ -47,6 +47,7 @@ import androidx.compose.foundation.layout.Arrangement.spacedBy
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -60,6 +61,7 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -98,6 +100,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuItemColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -976,6 +979,7 @@ private fun LazyGridItemScope.TileGridCell(
     largeTilesSpan: Int,
     modifier: Modifier = Modifier,
 ) {
+    val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
     val stateDescription = stringResource(id = R.string.accessibility_qs_edit_position, index + 1)
     val tileState by rememberTileState(cell.tile, selectionState)
     val resizingState = rememberResizingState(cell.tile.tileSpec, cell.isIcon)
@@ -1041,104 +1045,132 @@ private fun LazyGridItemScope.TileGridCell(
         selectionState.unSelect()
         onRemoveTile(cell.tile.tileSpec)
     }
-    InteractiveTileContainer(
-        tileState = tileState,
-        resizingState = resizingState,
-        modifier =
-            modifier
-                .height(TileHeight)
-                .fillMaxWidth()
-                .animateItem(placementSpec = placementSpec)
-                .tileTestTag(cell.isIcon),
-        onClick = {
-            if (tileState == TileState.Removable) {
-                removeTile()
-            } else if (tileState == TileState.Selected) {
-                coroutineScope.launch { resizingState.toggleCurrentValue() }
-            }
-        },
-        contentDescription = decorationClickLabel,
-    ) {
-        val placeableColor = MaterialTheme.colorScheme.primary.copy(alpha = .4f)
-        val backgroundColor by
-            animateColorAsState(
-                if (tileState == TileState.Placeable) placeableColor else colors.background
-            )
+    val tileHeightPx = with(LocalDensity.current) { TileHeight.toPx() }
+    val spacingPx = with(LocalDensity.current) { TileArrangementPadding.toPx() }
 
-        // Rapidly composing elements with the draggable modifier can cause visual jank. This
-        // usually happens when resizing a tile multiple times. We can fix this by applying the
-        // draggable modifier after the first frame
-        var isSelectable by remember { mutableStateOf(false) }
-        LaunchedEffect(dragAndDropState.dragInProgress) {
-            isSelectable = !dragAndDropState.dragInProgress
-        }
-        val selectableModifier = Modifier.selectableTile(cell.tile.tileSpec, selectionState)
-        val draggableModifier =
-            Modifier.dragAndDropTileSource(
-                SizedTileImpl(cell.tile, cell.width),
-                dragAndDropState,
-                DragType.Move,
-                selectionState::unSelect,
-            )
-
-        val toggleSelectionLabel = stringResource(R.string.accessibility_qs_edit_toggle_selection)
-        val placeTileLabel = stringResource(R.string.accessibility_qs_edit_place_tile_action)
-        Box(
-            Modifier.fillMaxSize()
-                .clearAndSetSemantics {
-                    this.stateDescription = stateDescription
-                    contentDescription = cell.tile.label.text
-
-                    if (isSelectable) {
-                        val actions =
-                            mutableListOf(
-                                CustomAccessibilityAction(togglePlacementModeLabel) {
-                                    selectionState.togglePlacementMode(cell.tile.tileSpec)
-                                    true
-                                }
-                            )
-
-                        if (selectionState.placementEnabled) {
-                            actions.add(
-                                CustomAccessibilityAction(placeTileLabel) {
-                                    selectionState.placeTileAt(cell.tile.tileSpec)
-                                    true
-                                }
-                            )
+    Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        InteractiveTileContainer(
+            tileState = tileState,
+            resizingState = resizingState,
+            modifier =
+                Modifier
+                    .layout { measurable, constraints ->
+                        val height = if (isNestUI) {
+                            if (cell.isIcon) {
+                                (constraints.maxWidth * 2).toFloat() / 2.2f
+                            } else {
+                                (constraints.maxWidth - spacingPx).toFloat() / 2.2f
+                            }
                         } else {
-                            // Don't allow for resizing during placement mode
-                            actions.add(
-                                CustomAccessibilityAction(toggleSizeLabel) {
-                                    onResize(FinalResizeOperation(cell.tile.tileSpec, !cell.isIcon))
-                                    true
-                                }
-                            )
-                            actions.add(
-                                CustomAccessibilityAction(toggleSelectionLabel) {
-                                    selectionState.toggleSelection(cell.tile.tileSpec)
-                                    true
-                                }
-                            )
+                            tileHeightPx
+                        }.toInt()
+                        val width = if (isNestUI && cell.isIcon) height else constraints.maxWidth
+                        val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width, minHeight = height, maxHeight = height))
+                        layout(width, height) {
+                            placeable.placeRelative(0, 0)
                         }
-
-                        customActions = actions
                     }
+                    .animateItem(placementSpec = placementSpec)
+                    .tileTestTag(cell.isIcon),
+            onClick = {
+                if (tileState == TileState.Removable) {
+                    removeTile()
+                } else if (tileState == TileState.Selected) {
+                    coroutineScope.launch { resizingState.toggleCurrentValue() }
                 }
-                .borderOnFocus(
-                    MaterialTheme.colorScheme.secondary,
-                    CornerSize(InactiveCornerRadius),
-                )
-                .thenIf(isSelectable) { draggableModifier }
-                .tileBackground { backgroundColor }
-                .clickable { selectionState.onTap(cell.tile.tileSpec) }
-                .thenIf(isSelectable) { selectableModifier }
+            },
+            contentDescription = decorationClickLabel,
         ) {
-            EditTile(
-                tile = cell.tile,
-                tileState = tileState,
-                state = resizingState,
-                progress = progress,
-            )
+            val placeableColor = MaterialTheme.colorScheme.primary.copy(alpha = .4f)
+            val backgroundColor by
+                animateColorAsState(
+                    if (tileState == TileState.Placeable) placeableColor else colors.background
+                )
+
+            // Rapidly composing elements with the draggable modifier can cause visual jank. This
+            // usually happens when resizing a tile multiple times. We can fix this by applying the
+            // draggable modifier after the first frame
+            var isSelectable by remember { mutableStateOf(false) }
+            LaunchedEffect(dragAndDropState.dragInProgress) {
+                isSelectable = !dragAndDropState.dragInProgress
+            }
+            val selectableModifier = Modifier.selectableTile(cell.tile.tileSpec, selectionState)
+            val draggableModifier =
+                Modifier.dragAndDropTileSource(
+                    SizedTileImpl(cell.tile, cell.width),
+                    dragAndDropState,
+                    DragType.Move,
+                    selectionState::unSelect,
+                )
+
+            val toggleSelectionLabel = stringResource(R.string.accessibility_qs_edit_toggle_selection)
+            val placeTileLabel = stringResource(R.string.accessibility_qs_edit_place_tile_action)
+            Box(
+                Modifier.fillMaxSize()
+                    .clearAndSetSemantics {
+                        this.stateDescription = stateDescription
+                        contentDescription = cell.tile.label.text
+
+                        if (isSelectable) {
+                            val actions =
+                                mutableListOf(
+                                    CustomAccessibilityAction(togglePlacementModeLabel) {
+                                        selectionState.togglePlacementMode(cell.tile.tileSpec)
+                                        true
+                                    }
+                                )
+
+                            if (selectionState.placementEnabled) {
+                                actions.add(
+                                    CustomAccessibilityAction(placeTileLabel) {
+                                        selectionState.placeTileAt(cell.tile.tileSpec)
+                                        true
+                                    }
+                                )
+                            } else {
+                                // Don't allow for resizing during placement mode
+                                actions.add(
+                                    CustomAccessibilityAction(toggleSizeLabel) {
+                                        onResize(FinalResizeOperation(cell.tile.tileSpec, !cell.isIcon))
+                                        true
+                                    }
+                                )
+                                actions.add(
+                                    CustomAccessibilityAction(toggleSelectionLabel) {
+                                        selectionState.toggleSelection(cell.tile.tileSpec)
+                                        true
+                                    }
+                                )
+                            }
+
+                            customActions = actions
+                        }
+                    }
+                    .borderOnFocus(
+                        MaterialTheme.colorScheme.secondary,
+                        CornerSize(InactiveCornerRadius),
+                    )
+                    .thenIf(isSelectable) { draggableModifier }
+                    .tileBackground { backgroundColor }
+                    .clickable { selectionState.onTap(cell.tile.tileSpec) }
+                    .thenIf(isSelectable) { selectableModifier }
+            ) {
+                val rawScale = if (isNestUI) {
+                    (TileHeight / 64.dp).coerceAtLeast(1f)
+                } else 1f
+                val scale = (rawScale - 1f) * 0.5f + 1f
+
+                CompositionLocalProvider(
+                    com.android.systemui.qs.shared.ui.LocalTileContentScale provides scale
+                ) {
+                    EditTile(
+                        tile = cell.tile,
+                        tileState = tileState,
+                        state = resizingState,
+                        progress = progress,
+                    )
+                }
+            }
         }
     }
 }
@@ -1331,9 +1363,7 @@ fun EditTile(
     val iconSizeDiff = CommonTileDefaults.IconSize - CommonTileDefaults.LargeTileIconSize
     val containerAlpha by animateFloatAsState(if (tileState == TileState.GreyedOut) .4f else 1f)
     val isNestUI = com.android.systemui.qs.shared.ui.LocalIsNestUIEnabled.current
-    Row(
-        horizontalArrangement = spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    BoxWithConstraints(
         modifier =
             Modifier.layout { measurable, constraints ->
                     val (min, max) = state.bounds
@@ -1370,15 +1400,41 @@ fun EditTile(
                         placeable.placeRelative(startPadding.roundToInt(), 0)
                     }
                 }
-                .largeTilePadding()
                 .graphicsLayer { this.alpha = containerAlpha },
     ) {
-        // Icon
-        if (isNestUI) {
-            Box(
-                modifier = Modifier.fillMaxHeight().aspectRatio(1f),
-                contentAlignment = Alignment.Center,
-            ) {
+        val capturedMaxWidth = maxWidth
+        Row(
+            modifier = Modifier.fillMaxSize().largeTilePadding(maxWidth = capturedMaxWidth),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Icon
+            if (isNestUI) {
+                val spacing = dimensionResource(id = R.dimen.qs_tile_margin_horizontal)
+                val cellWidth = (capturedMaxWidth - spacing) / 2
+                Box(
+                    modifier = Modifier.width(cellWidth),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxHeight().aspectRatio(1f),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            Modifier.size(ToggleTargetSize).thenIf(tile.isDualTarget) {
+                                Modifier.drawBehind { drawCircle(colors.iconBackground, alpha = progress()) }
+                            }
+                        ) {
+                            SmallTileContent(
+                                iconProvider = { tile.icon },
+                                color = colors.icon,
+                                animateToEnd = true,
+                                size = { CommonTileDefaults.IconSize - iconSizeDiff * progress() },
+                                modifier = Modifier.align(Alignment.Center),
+                            )
+                        }
+                    }
+                }
+            } else {
                 Box(
                     Modifier.size(ToggleTargetSize).thenIf(tile.isDualTarget) {
                         Modifier.drawBehind { drawCircle(colors.iconBackground, alpha = progress()) }
@@ -1393,29 +1449,15 @@ fun EditTile(
                     )
                 }
             }
-        } else {
-            Box(
-                Modifier.size(ToggleTargetSize).thenIf(tile.isDualTarget) {
-                    Modifier.drawBehind { drawCircle(colors.iconBackground, alpha = progress()) }
-                }
-            ) {
-                SmallTileContent(
-                    iconProvider = { tile.icon },
-                    color = colors.icon,
-                    animateToEnd = true,
-                    size = { CommonTileDefaults.IconSize - iconSizeDiff * progress() },
-                    modifier = Modifier.align(Alignment.Center),
-                )
-            }
-        }
 
-        // Labels, positioned after the icon
-        LargeTileLabels(
-            label = tile.label.text,
-            secondaryLabel = tile.appName?.text,
-            colors = colors,
-            modifier = Modifier.weight(1f).graphicsLayer { this.alpha = progress() },
-        )
+            // Labels, positioned after the icon
+            LargeTileLabels(
+                label = tile.label.text,
+                secondaryLabel = tile.appName?.text,
+                colors = colors,
+                modifier = Modifier.weight(1f).graphicsLayer { this.alpha = progress() },
+            )
+        }
     }
 }
 
