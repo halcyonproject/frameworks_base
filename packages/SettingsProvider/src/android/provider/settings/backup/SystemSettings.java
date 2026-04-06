@@ -76,6 +76,8 @@ public class SystemSettings {
                 Settings.System.POWER_SOUNDS_ENABLED,       // moved to global
                 Settings.System.DOCK_SOUNDS_ENABLED,        // moved to global
                 Settings.System.LOCKSCREEN_SOUNDS_ENABLED,
+                Settings.System.LOCKSCREEN_SHOW_CUSTOM_CARRIER_TEXT_SIM1,
+                Settings.System.LOCKSCREEN_SHOW_CUSTOM_CARRIER_TEXT_SIM2,
                 Settings.System.SHOW_WEB_SUGGESTIONS,
                 Settings.System.SIP_CALL_OPTIONS,
                 Settings.System.SIP_RECEIVE_CALLS,

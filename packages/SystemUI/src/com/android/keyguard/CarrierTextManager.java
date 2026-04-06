@@ -114,6 +114,14 @@ public class CarrierTextManager {
                 }
             };
 
+    private final android.database.ContentObserver mCustomCarrierObserver =
+            new android.database.ContentObserver(new android.os.Handler(android.os.Looper.getMainLooper())) {
+                @Override
+                public void onChange(boolean selfChange, android.net.Uri uri) {
+                    updateCarrierText();
+                }
+            };
+
     @VisibleForTesting
     protected final KeyguardUpdateMonitorCallback mCallback = new KeyguardUpdateMonitorCallback() {
         @Override
@@ -297,6 +305,12 @@ public class CarrierTextManager {
                 // Keyguard update monitor expects callbacks from main thread
                 mMainExecutor.execute(() -> {
                     mWakefulnessLifecycle.addObserver(mWakefulnessObserver);
+                    mContext.getContentResolver().registerContentObserver(
+                            android.provider.Settings.System.getUriFor(android.provider.Settings.System.LOCKSCREEN_SHOW_CUSTOM_CARRIER_TEXT_SIM1),
+                            false, mCustomCarrierObserver, android.os.UserHandle.USER_ALL);
+                    mContext.getContentResolver().registerContentObserver(
+                            android.provider.Settings.System.getUriFor(android.provider.Settings.System.LOCKSCREEN_SHOW_CUSTOM_CARRIER_TEXT_SIM2),
+                            false, mCustomCarrierObserver, android.os.UserHandle.USER_ALL);
                 });
                 mTelephonyListenerManager.addActiveDataSubscriptionIdListener(mPhoneStateListener);
                 cancelSatelliteCollectionJob(/* reason= */ "Starting new job");
@@ -321,6 +335,7 @@ public class CarrierTextManager {
             mCarrierTextCallback = null;
             mMainExecutor.execute(() -> {
                 mWakefulnessLifecycle.removeObserver(mWakefulnessObserver);
+                mContext.getContentResolver().unregisterContentObserver(mCustomCarrierObserver);
             });
             mTelephonyListenerManager.removeActiveDataSubscriptionIdListener(mPhoneStateListener);
             cancelSatelliteCollectionJob(/* reason= */ "#handleSetListening has null callback");
@@ -374,6 +389,13 @@ public class CarrierTextManager {
             subOrderBySlot[slotId] = i;
             int simState = mKeyguardUpdateMonitor.getSimStateForSlotId(slotId);
             CharSequence carrierName = subs.get(i).getCarrierName();
+            String settingKey = slotId == 0 ? android.provider.Settings.System.LOCKSCREEN_SHOW_CUSTOM_CARRIER_TEXT_SIM1
+                    : android.provider.Settings.System.LOCKSCREEN_SHOW_CUSTOM_CARRIER_TEXT_SIM2;
+            String customCarrierName = android.provider.Settings.System.getStringForUser(
+                    mContext.getContentResolver(), settingKey, android.os.UserHandle.USER_CURRENT);
+            if (!android.text.TextUtils.isEmpty(customCarrierName)) {
+                carrierName = customCarrierName.trim();
+            }
             CharSequence carrierTextForSimState = getCarrierTextForSimState(simState, carrierName);
             mLogger.logUpdateLoopStart(subId, simState, String.valueOf(carrierName));
             if (carrierTextForSimState != null) {

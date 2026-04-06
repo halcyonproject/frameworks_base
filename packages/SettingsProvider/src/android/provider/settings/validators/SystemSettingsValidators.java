@@ -279,6 +279,8 @@ public class SystemSettingsValidators {
         VALIDATORS.put(System.PREFERRED_REGION, ANY_STRING_VALIDATOR);
         VALIDATORS.put(System.CV_ENABLED, new InclusiveIntegerRangeValidator(0, 1));
         VALIDATORS.put(System.CV_DYNAMIC_ENABLED, new InclusiveIntegerRangeValidator(0, 1));
+        VALIDATORS.put(System.LOCKSCREEN_SHOW_CUSTOM_CARRIER_TEXT_SIM1, ANY_STRING_VALIDATOR);
+        VALIDATORS.put(System.LOCKSCREEN_SHOW_CUSTOM_CARRIER_TEXT_SIM2, ANY_STRING_VALIDATOR);
         VALIDATORS.put(
                 System.CV_PREFERRED_INTENSITY,
                 new InclusiveFloatRangeValidator(

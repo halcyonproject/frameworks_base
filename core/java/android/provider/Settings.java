@@ -6322,6 +6322,16 @@ public final class Settings {
         public static final String LOCKSCREEN_DISABLED = "lockscreen.disabled";
 
         /**
+         * @hide
+         */
+        public static final String LOCKSCREEN_SHOW_CUSTOM_CARRIER_TEXT_SIM1 = "lockscreen_show_custom_carrier_text_sim1";
+
+        /**
+         * @hide
+         */
+        public static final String LOCKSCREEN_SHOW_CUSTOM_CARRIER_TEXT_SIM2 = "lockscreen_show_custom_carrier_text_sim2";
+
+        /**
          * @deprecated Use {@link android.provider.Settings.Global#LOW_BATTERY_SOUND}
          * instead
          * @hide
@@ -7104,6 +7114,8 @@ public final class Settings {
             PRIVATE_SETTINGS.add(DOCK_SOUNDS_ENABLED);
             PRIVATE_SETTINGS.add(LOCKSCREEN_SOUNDS_ENABLED);
             PRIVATE_SETTINGS.add(LOCKSCREEN_DISABLED);
+            PRIVATE_SETTINGS.add(LOCKSCREEN_SHOW_CUSTOM_CARRIER_TEXT_SIM1);
+            PRIVATE_SETTINGS.add(LOCKSCREEN_SHOW_CUSTOM_CARRIER_TEXT_SIM2);
             PRIVATE_SETTINGS.add(LOW_BATTERY_SOUND);
             PRIVATE_SETTINGS.add(DESK_DOCK_SOUND);
             PRIVATE_SETTINGS.add(DESK_UNDOCK_SOUND);
