@@ -161,7 +161,7 @@ object BiometricViewSizeBinder {
                     // Handle guidelines
                     val bottomInset =
                         windowManager.maximumWindowMetrics.windowInsets
-                            .getInsets(WindowInsets.Type.navigationBars())
+                            .getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars())
                             .bottom
                     val topInset =
                         windowManager.maximumWindowMetrics.windowInsets
