@@ -33,10 +33,6 @@
         android:key="managed_profile"
         android:title="@string/status_bar_work" />
 
-    <!-- ime -->
-    <!-- sync_failing -->
-    <!-- sync_active -->
-
     <com.android.systemui.tuner.StatusBarSwitch
         android:icon="@drawable/ic_statusbar_cast"
         android:key="cast"
@@ -56,10 +52,6 @@
         android:icon="@drawable/ic_statusbar_camera"
         android:key="cameratoggle"
         android:title="@string/quick_settings_camera_label" />
-
-    <!-- nfc -->
-    <!-- tty -->
-    <!-- speakerphone -->
 
     <com.android.systemui.tuner.StatusBarSwitch
         android:icon="@drawable/ic_statusbar_do_not_disturb"
@@ -113,25 +105,21 @@
         android:title="@string/status_bar_vowifi"
         sysui:defValue="false" />
 
-    <!-- other weird signal stuff -->
-
     <com.android.systemui.tuner.StatusBarSwitch
         android:icon="@drawable/ic_statusbar_vpn"
         android:key="vpn"
         android:title="@string/legacy_vpn_name" />
-
-    <com.android.systemui.tuner.BatteryPreference
-        android:icon="@*android:drawable/ic_battery"
-        android:title="@string/battery"
-        android:summary="%s"
-        android:entries="@array/battery_options" />
 
     <com.android.systemui.tuner.StatusBarSwitch
         android:icon="@drawable/ic_statusbar_alarm"
         android:key="alarm_clock"
         android:title="@string/status_bar_alarm" />
 
-    <!-- secure -->
+    <com.android.systemui.tuner.TunerSwitch
+        android:icon="@drawable/ic_statusbar_priority"
+        android:key="low_priority"
+        android:title="@string/tuner_low_priority"
+        sysui:defValue="false" />
 
     <com.android.systemui.tuner.ClockPreference
         android:icon="@drawable/ic_statusbar_clock"
@@ -139,10 +127,10 @@
         android:summary="%s"
         android:entries="@array/clock_options" />
 
-    <com.android.systemui.tuner.TunerSwitch
-        android:icon="@drawable/ic_statusbar_priority"
-        android:key="low_priority"
-        android:title="@string/tuner_low_priority"
-        sysui:defValue="false" />
+    <com.android.systemui.tuner.BatteryPreference
+        android:icon="@*android:drawable/ic_battery"
+        android:title="@string/battery"
+        android:summary="%s"
+        android:entries="@array/battery_options" />
 
 </PreferenceScreen>
