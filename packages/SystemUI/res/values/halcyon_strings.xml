@@ -13,8 +13,9 @@
      limitations under the License.
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
     <!-- Status bar - icons -->
-    <string name="status_bar_icons_title">Status bar icons</string>
+    <string name="status_bar_icons_title">Icon manager</string>
 
     <!-- Custom QS tiles -->
     <!-- Ambient display QS tile -->

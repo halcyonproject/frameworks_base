@@ -21,16 +21,16 @@ import android.os.Build;
 import android.os.Bundle;
 
 import androidx.preference.Preference;
-import androidx.preference.PreferenceFragment;
 
 import com.android.internal.logging.MetricsLogger;
 import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
+import com.android.settingslib.widget.SettingsBasePreferenceFragment;
 import com.android.systemui.res.R;
 import com.android.systemui.shared.plugins.PluginPrefs;
 import com.android.tools.r8.keepanno.annotations.KeepTarget;
 import com.android.tools.r8.keepanno.annotations.UsesReflection;
 
-public class TunerFragment extends PreferenceFragment {
+public class TunerFragment extends SettingsBasePreferenceFragment {
 
     private static final String TAG = "TunerFragment";
 
@@ -67,7 +67,7 @@ public class TunerFragment extends PreferenceFragment {
     })
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-        addPreferencesFromResource(R.xml.tuner_prefs);
+        setPreferencesFromResource(R.xml.tuner_prefs, rootKey);
         if (!PluginPrefs.hasPlugins(getContext())) {
             getPreferenceScreen().removePreference(findPreference(KEY_PLUGINS));
         }

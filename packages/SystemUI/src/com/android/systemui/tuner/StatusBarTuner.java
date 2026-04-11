@@ -18,19 +18,19 @@ package com.android.systemui.tuner;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
-import androidx.preference.PreferenceFragment;
 
 import com.android.internal.logging.MetricsLogger;
 import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
+import com.android.settingslib.widget.SettingsBasePreferenceFragment;
 import com.android.systemui.res.R;
 
-public class StatusBarTuner extends PreferenceFragment {
+public class StatusBarTuner extends SettingsBasePreferenceFragment {
 
     private MetricsLogger mMetricsLogger;
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-        addPreferencesFromResource(R.xml.status_bar_prefs);
+        setPreferencesFromResource(R.xml.status_bar_prefs, rootKey);
     }
 
     @Override
