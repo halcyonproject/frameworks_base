@@ -68,14 +68,16 @@ object BiometricViewSizeBinder {
         val windowManager = WindowManagerUtils.getWindowManager(view.context)
 
         val panelView = view.requireViewById<View>(R.id.panel)
-        val cornerRadius = view.resources.getDimension(R.dimen.biometric_dialog_corner_size)
+        val cornerRadiusPx =
+            view.resources.getDimensionPixelSize(R.dimen.biometric_dialog_corner_size)
+        val indicatorIconSpacing =
+            view.resources.getDimensionPixelSize(R.dimen.biometric_prompt_indicator_icon_spacing)
         val pxToDp =
             TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP,
                 1f,
                 view.resources.displayMetrics,
             )
-        val cornerRadiusPx = (pxToDp * cornerRadius).toInt()
 
         var currentPosition: PromptPosition = PromptPosition.Bottom
         var currentView: BiometricPromptView? = null
@@ -161,7 +163,11 @@ object BiometricViewSizeBinder {
                     // Handle guidelines
                     val bottomInset =
                         windowManager.maximumWindowMetrics.windowInsets
-                            .getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars())
+                            .getInsetsIgnoringVisibility(
+                                    WindowInsets.Type.navigationBars() or
+                                        WindowInsets.Type.mandatorySystemGestures()
+                                )
+
                             .bottom
                     val topInset =
                         windowManager.maximumWindowMetrics.windowInsets
@@ -398,6 +404,12 @@ object BiometricViewSizeBinder {
                         }
                     }
 
+                    nextConstraintSet.positionIndicatorRelativeToIcon(
+                        flipAboveIcon = currentState.isLowUdfps,
+                        iconSpacing = indicatorIconSpacing,
+                    )
+
+
                     // Handle landscape flip logic
                     if (currentState.position.isLeft) {
                         nextConstraintSet.clear(R.id.scrollView, ConstraintSet.LEFT)
@@ -474,4 +486,33 @@ private fun ConstraintSet.applyMarginConstraint(
         connect(viewId, side, ConstraintSet.PARENT_ID, side)
     }
     setMargin(viewId, side, margin)
+}
+
+private fun ConstraintSet.positionIndicatorRelativeToIcon(
+    flipAboveIcon: Boolean,
+    iconSpacing: Int,
+) {
+    clear(R.id.indicator, ConstraintSet.TOP)
+    clear(R.id.indicator, ConstraintSet.BOTTOM)
+    if (flipAboveIcon) {
+        connect(
+            R.id.indicator,
+            ConstraintSet.BOTTOM,
+            R.id.biometric_icon,
+            ConstraintSet.TOP,
+            iconSpacing,
+        )
+        connect(R.id.indicator, ConstraintSet.TOP, R.id.scrollView, ConstraintSet.BOTTOM)
+        setVerticalBias(R.id.indicator, 1f)
+    } else {
+        connect(
+            R.id.indicator,
+            ConstraintSet.TOP,
+            R.id.biometric_icon,
+            ConstraintSet.BOTTOM,
+            iconSpacing,
+        )
+        connect(R.id.indicator, ConstraintSet.BOTTOM, R.id.button_bar, ConstraintSet.TOP)
+        setVerticalBias(R.id.indicator, 0f)
+    }
 }
