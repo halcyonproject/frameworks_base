@@ -3094,6 +3094,7 @@ public class NotificationStackScrollLayout
                     mExpandedInThisMotion && getOwnScrollY() >= 0 ? 0 : Integer.MAX_VALUE / 2);
 
             animateScroll();
+            boostInteraction(700);
         }
     }
 
