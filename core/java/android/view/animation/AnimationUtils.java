@@ -228,16 +228,17 @@ public class AnimationUtils {
     public static Animation loadAnimation(Context context, @AnimRes int id)
             throws NotFoundException {
 
-        if (ActivityAnimations.sPerfAnimEnabled) {
+        if (SystemProperties.getBoolean("persist.sys.activity_anim_perf_override", false)) {
+            ActivityAnimations.maybeInit(context);
             switch (id) {
                 case R.anim.activity_open_enter:
-                    return ActivityAnimations.getOpenEnter(context);
+                    return ActivityAnimations.getOpenEnter();
                 case R.anim.activity_open_exit:
-                    return ActivityAnimations.getOpenExit(context);
+                    return ActivityAnimations.getOpenExit();
                 case R.anim.activity_close_enter:
-                    return ActivityAnimations.getCloseEnter(context);
+                    return ActivityAnimations.getCloseEnter();
                 case R.anim.activity_close_exit:
-                    return ActivityAnimations.getCloseExit(context);
+                    return ActivityAnimations.getCloseExit();
             }
         }
 
@@ -525,9 +526,6 @@ public class AnimationUtils {
     /** @hide */
     public final class ActivityAnimations {
 
-        public static final boolean sPerfAnimEnabled = SystemProperties.getBoolean(
-                "persist.sys.activity_anim_perf_override", false);
-
         private static Animation sOpenEnter;
         private static Animation sOpenExit;
         private static Animation sCloseEnter;
@@ -535,40 +533,24 @@ public class AnimationUtils {
 
         private static SpringInterpolator sSpatialSpec;
         private static SpringInterpolator sEffectsSpec;
+        private static int sBackdropColor;
 
         private static final float DISTANCE = 0.333f;
 
         private ActivityAnimations() {}
 
         /** @hide */
-        public static void preload(Context context) {
-            sSpatialSpec = new SpringInterpolator(0.8f, 380f);
-            sEffectsSpec = new SpringInterpolator(1.0f, 3800f);
-            sOpenEnter = new ActivityAnimFactory()
-                    .fromX(1.0f)
-                    .toX(0.0f)
-                    .fade(0.0f, 1.0f)
-                    .build();
-            sOpenExit = new ActivityAnimFactory()
-                    .fromX(0.0f)
-                    .toX(-DISTANCE)
-                    .fade(1.0f, 0.0f)
-                    .build();
-            sCloseEnter = new ActivityAnimFactory()
-                        .fromX(-DISTANCE)
-                        .toX(0.0f)
-                        .fade(0.0f, 1.0f)
-                        .build();
-            sCloseExit = new ActivityAnimFactory()
-                        .fromX(0.0f)
-                        .toX(1.0f)
-                        .fade(1.0f, 0.0f)
-                        .build();
-        }
-
-        private static int loadBackdropColor(Context context) {
-            return context.getColor(
+        public static void maybeInit(Context context) {
+            if (sSpatialSpec == null) {
+                sSpatialSpec = new SpringInterpolator(0.8f, 380f);
+                sEffectsSpec = new SpringInterpolator(1.0f, 3800f);
+            }
+            sBackdropColor = context.getColor(
                     com.android.internal.R.color.materialColorSurfaceContainer);
+            if (sOpenEnter != null) sOpenEnter.setBackdropColor(sBackdropColor);
+            if (sOpenExit != null) sOpenExit.setBackdropColor(sBackdropColor);
+            if (sCloseEnter != null) sCloseEnter.setBackdropColor(sBackdropColor);
+            if (sCloseExit != null) sCloseExit.setBackdropColor(sBackdropColor);
         }
 
         private static class ActivityAnimFactory {
@@ -609,31 +591,56 @@ public class AnimationUtils {
                     animationSet.addAnimation(fade);
                 }
                 animationSet.setShowBackdrop(true);
+                animationSet.setBackdropColor(sBackdropColor);
                 return animationSet;
             }
         }
 
         /** @hide */
-        public static Animation getOpenEnter(Context context) {
-            sOpenEnter.setBackdropColor(loadBackdropColor(context));
+        public static Animation getOpenEnter() {
+            if (sOpenEnter == null) {
+                sOpenEnter = new ActivityAnimFactory()
+                        .fromX(1.0f)
+                        .toX(0.0f)
+                        .fade(0.0f, 1.0f)
+                        .build();
+            }
             return sOpenEnter;
         }
 
         /** @hide */
-        public static Animation getOpenExit(Context context) {
-            sOpenExit.setBackdropColor(loadBackdropColor(context));
+        public static Animation getOpenExit() {
+            if (sOpenExit == null) {
+                sOpenExit = new ActivityAnimFactory()
+                        .fromX(0.0f)
+                        .toX(-DISTANCE)
+                        .fade(1.0f, 0.0f)
+                        .build();
+            }
             return sOpenExit;
         }
 
         /** @hide */
-        public static Animation getCloseEnter(Context context) {
-            sCloseEnter.setBackdropColor(loadBackdropColor(context));
+        public static Animation getCloseEnter() {
+            if (sCloseEnter == null) {
+                sCloseEnter = new ActivityAnimFactory()
+                        .fromX(-DISTANCE)
+                        .toX(0.0f)
+                        .fade(0.0f, 1.0f)
+                        .build();
+            }
             return sCloseEnter;
         }
 
         /** @hide */
-        public static Animation getCloseExit(Context context) {
-            sCloseExit.setBackdropColor(loadBackdropColor(context));
+        public static Animation getCloseExit() {
+            if (sCloseExit == null) {
+                sCloseExit = new ActivityAnimFactory()
+                        .fromX(0.0f)
+                        .toX(1.0f)
+                        .fade(1.0f, 0.0f)
+                        .build();
+            }
             return sCloseExit;
         }
     }
