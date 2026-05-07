@@ -107,7 +107,7 @@
 
     <!-- The default tiles to display in QuickSettings with the new UI -->
     <string name="quick_settings_tiles_new_default" translatable="false">
-        internet,bt,dnd,cast,flashlight,airplane,rotation,wallet,alarm,controls,screenrecord,battery
+        wifi,cell,bt,sound,flashlight,dnd,airplane,rotation,wallet,alarm,controls,screenrecord,battery
     </string>
 
     <!-- The class path of the Safety Quick Settings Tile -->
