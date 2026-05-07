@@ -157,6 +157,9 @@ import com.android.systemui.util.RingerModeTracker;
 import com.android.systemui.util.settings.GlobalSettings;
 import com.android.systemui.util.settings.SecureSettings;
 
+import com.android.internal.graphics.ColorUtils;
+import com.android.systemui.statusbar.BlurUtils;
+
 import dagger.Lazy;
 
 import java.util.ArrayList;
@@ -291,6 +294,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
     private final GlobalActionsInteractor mInteractor;
     private final Lazy<DisplayWindowPropertiesRepository> mDisplayWindowPropertiesRepositoryLazy;
     private final PowerManager mPowerManager;
+    private final BlurUtils mBlurUtils;
     private int mGlobalActionDialogTimeout;
     private final Handler mHandler;
 
@@ -428,8 +432,10 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
             UserLogoutInteractor logoutInteractor,
             GlobalActionsInteractor interactor,
             Lazy<DisplayWindowPropertiesRepository> displayWindowPropertiesRepository,
-            PowerManager powerManager) {
+            PowerManager powerManager,
+            BlurUtils blurUtils) {
         mContext = context;
+        mBlurUtils = blurUtils;
         mWindowManagerFuncs = windowManagerFuncs;
         mAudioManager = audioManager;
         mLockPatternUtils = lockPatternUtils;
@@ -890,7 +896,8 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
                 mShadeController,
                 mKeyguardUpdateMonitor,
                 mLockPatternUtils,
-                mSelectedUserInteractor) {
+                mSelectedUserInteractor,
+                mBlurUtils) {
             @Override
             public boolean dispatchTouchEvent(MotionEvent event) {
                 rescheduleBurninTimeout(mGlobalActionDialogTimeout);
@@ -2281,6 +2288,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
             }
 
             if (QsInCompose.isEnabled()) {
+                boolean isDark = (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
                 int textAndIconColor = context.getColor(R.color.materialColorOnSurface);
                 messageView.setTextColor(textAndIconColor);
                 mIconView.setBackgroundTintList(
@@ -2758,6 +2766,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
         private KeyguardUpdateMonitor mKeyguardUpdateMonitor;
         private SelectedUserInteractor mSelectedUserInteractor;
         private LockPatternUtils mLockPatternUtils;
+        private final BlurUtils mBlurUtils;
         private float mWindowDimAmount;
 
         protected ViewGroup mContainer;
@@ -2841,10 +2850,12 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
                 ShadeController shadeController,
                 KeyguardUpdateMonitor keyguardUpdateMonitor,
                 LockPatternUtils lockPatternUtils,
-                SelectedUserInteractor selectedUserInteractor) {
+                SelectedUserInteractor selectedUserInteractor,
+                BlurUtils blurUtils) {
             // We set dismissOnDeviceLock to false because we have a custom broadcast receiver to
             // dismiss this dialog when the device is locked.
             super(context, themeRes, false /* dismissOnDeviceLock */);
+            mBlurUtils = blurUtils;
             mContext = context;
             mAdapter = adapter;
             mOverflowAdapter = overflowAdapter;
@@ -2876,6 +2887,12 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT, mOnBackInvokedCallback);
             if (DEBUG) Log.d(TAG, "OnBackInvokedCallback handler registered");
+
+            if (mBlurUtils.supportsBlursOnWindows()) {
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+                getWindow().getAttributes().setBlurBehindRadius(
+                        (int) mBlurUtils.blurRadiusOfRatio(1f));
+            }
         }
 
         @VisibleForTesting
@@ -3003,9 +3020,16 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
             }
             if (QsInCompose.isEnabled()) {
                 View v = findViewById(R.id.list);
-                v.setBackgroundTintList(ColorStateList.valueOf(
-                        getContext().getColor(R.color.materialColorSurfaceContainerLow)
-                ));
+                if (mBlurUtils.supportsBlursOnWindows()) {
+                    int color = getContext().getColor(R.color.materialColorSurfaceContainerLow);
+                    boolean isDark = (mContext.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+                    int alpha = isDark ? 51 : 140; // 0.2f (51) or 0.55f (140)
+                    v.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.setAlphaComponent(color, alpha)));
+                } else {
+                    v.setBackgroundTintList(ColorStateList.valueOf(
+                            getContext().getColor(R.color.materialColorSurfaceContainerLow)
+                    ));
+                }
             }
 
             // If user entered from the lock screen and smart lock was enabled, disable it
