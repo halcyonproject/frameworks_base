@@ -2959,13 +2959,13 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
         }
 
         public void showPowerOptionsMenu() {
-            mPowerOptionsDialog = GlobalActionsPowerDialog.create(mContext, mPowerOptionsAdapter);
+            mPowerOptionsDialog = GlobalActionsPowerDialog.create(mContext, mPowerOptionsAdapter, mBlurUtils);
             mPowerOptionsDialog.show();
         }
 
         public void showRestartOptionsMenu() {
             mRestartOptionsDialog = GlobalActionsPowerDialog.create(mContext,
-                    mRestartOptionsAdapter);
+                    mRestartOptionsAdapter, mBlurUtils);
             mRestartOptionsDialog.show();
         }
 
@@ -3029,7 +3029,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
                 if (mBlurUtils.supportsBlursOnWindows()) {
                     int color = getContext().getColor(R.color.materialColorSurfaceContainerLow);
                     boolean isDark = (mContext.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-                    int alpha = isDark ? 51 : 140; // 0.2f (51) or 0.55f (140)
+                    int alpha = isDark ? 51 : 112; // 0.2f (51) or 0.44f (112)
                     v.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.setAlphaComponent(color, alpha)));
                 } else {
                     v.setBackgroundTintList(ColorStateList.valueOf(

@@ -26,6 +26,10 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ListAdapter;
 
+import com.android.internal.graphics.ColorUtils;
+import com.android.systemui.res.R;
+import com.android.systemui.statusbar.BlurUtils;
+
 import androidx.constraintlayout.helper.widget.Flow;
 
 /**
@@ -36,7 +40,7 @@ public class GlobalActionsPowerDialog {
     /**
      * Create a dialog for displaying Shut Down and Restart actions.
      */
-    public static Dialog create(@NonNull Context context, ListAdapter adapter) {
+    public static Dialog create(@NonNull Context context, ListAdapter adapter, BlurUtils blurUtils) {
         ViewGroup listView = (ViewGroup) LayoutInflater.from(context).inflate(
                 com.android.systemui.res.R.layout.global_actions_power_dialog_flow, null);
 
@@ -62,6 +66,21 @@ public class GlobalActionsPowerDialog {
                 com.android.systemui.res.R.drawable.global_actions_lite_background,
                 context.getTheme()));
         window.addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+
+        if (blurUtils != null && blurUtils.supportsBlursOnWindows()) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+            window.getAttributes().setBlurBehindRadius((int) blurUtils.blurRadiusOfRatio(1f));
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+
+            int color = context.getColor(com.android.internal.R.color.materialColorSurfaceContainerLow);
+            boolean isDark = (context.getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+            int alpha = isDark ? 51 : 112; // 0.2f or 0.44f
+            listView.setBackgroundTintList(android.content.res.ColorStateList.valueOf(ColorUtils.setAlphaComponent(color, alpha)));
+
+            if (!isDark) {
+                window.setDimAmount(0.2f);
+            }
+        }
 
         return dialog;
     }
