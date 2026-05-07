@@ -156,6 +156,11 @@ fun SystemUIDialogFactory.createBottomSheet(
                         window.attributes.blurBehindRadius = blurUtils.maxBlurRadius.toInt()
                         window.setBackgroundBlurRadius(blurUtils.maxBlurRadius.toInt())
                         window.setBackgroundDrawableResource(android.R.color.transparent)
+
+                        val isDark = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+                        if (!isDark) {
+                            window.setDimAmount(0.2f)
+                        }
                     }
                 }
             }

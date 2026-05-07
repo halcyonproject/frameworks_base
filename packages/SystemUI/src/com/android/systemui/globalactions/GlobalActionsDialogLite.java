@@ -2892,6 +2892,12 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
                 getWindow().getAttributes().setBlurBehindRadius(
                         (int) mBlurUtils.blurRadiusOfRatio(1f));
+
+                boolean isDark = (mContext.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+                if (!isDark) {
+                    mWindowDimAmount = 0.2f;
+                    getWindow().setDimAmount(mWindowDimAmount);
+                }
             }
         }
 
