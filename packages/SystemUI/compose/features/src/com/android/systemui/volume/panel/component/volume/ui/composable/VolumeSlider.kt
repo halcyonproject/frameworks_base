@@ -65,6 +65,7 @@ import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -136,10 +137,11 @@ fun VolumeSlider(
         ) {
             val materialSliderColors =
                 SliderDefaults.colors(
-                    activeTickColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    disabledActiveTickColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    disabledInactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    activeTrackColor = MaterialTheme.colorScheme.primary,
+                    inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    activeTickColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.38f),
+                    inactiveTickColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                    thumbColor = MaterialTheme.colorScheme.primary,
                 )
             if (state is SliderState.Empty) {
                 // reserve the space for the slider to avoid excess resizing

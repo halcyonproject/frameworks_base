@@ -50,6 +50,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -96,12 +97,7 @@ class MediaOutputComponent @Inject constructor(private val viewModel: MediaOutpu
                         true
                     }
                 },
-            color =
-                if (enabled) {
-                    MaterialTheme.colorScheme.surface
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainerHighest
-                },
+            color = Color.Transparent,
             shape = RoundedCornerShape(28.dp),
             useModifierBasedImplementation = true,
             onClick =

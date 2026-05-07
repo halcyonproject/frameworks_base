@@ -20,6 +20,7 @@ import android.app.Dialog
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.annotation.GravityInt
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
@@ -61,6 +62,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -145,6 +147,19 @@ fun SystemUIDialogFactory.createBottomSheet(
                     if (!isDragged && dragState.currentValue == DragAnchors.End) dialog.dismiss()
                 }
             }
+
+            val supportsBlur = blurUtils.supportsBlursOnWindows()
+            if (supportsBlur) {
+                LaunchedEffect(dialog) {
+                    dialog.window?.let { window ->
+                        window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+                        window.attributes.blurBehindRadius = blurUtils.maxBlurRadius.toInt()
+                        window.setBackgroundBlurRadius(blurUtils.maxBlurRadius.toInt())
+                        window.setBackgroundDrawableResource(android.R.color.transparent)
+                    }
+                }
+            }
+
             Box(
                 modifier =
                     Modifier.bottomSheetClickable { dialog.dismiss() }
@@ -189,7 +204,14 @@ fun SystemUIDialogFactory.createBottomSheet(
                                     else DraggableBottomSheet.MaxWidth
                             ),
                     shape = RoundedCornerShape(topStart = radius, topEnd = radius),
-                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    color =
+                        if (supportsBlur) {
+                            val isDark = LocalConfiguration.current.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+                            val alpha = if (isDark) 0.3f else 0.6f
+                            MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = alpha)
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainer
+                        },
                 ) {
                     Box(
                         Modifier.padding(

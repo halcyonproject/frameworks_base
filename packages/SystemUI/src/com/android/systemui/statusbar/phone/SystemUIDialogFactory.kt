@@ -31,6 +31,7 @@ constructor(
     private val dialogManager: SystemUIDialogManager,
     private val broadcastDispatcher: BroadcastDispatcher,
     private val dialogTransitionAnimator: DialogTransitionAnimator,
+    val blurUtils: com.android.systemui.statusbar.BlurUtils,
 ) {
     /**
      * Create a new [ComponentSystemUIDialog].
