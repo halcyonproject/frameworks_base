@@ -19,6 +19,7 @@
 #define LOG_TAG "BootAnimation"
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 
+#include <chrono>
 #include <filesystem>
 #include <vector>
 
@@ -716,7 +717,9 @@ bool BootAnimation::findBootAnimationFileInternal(const std::vector<std::string>
 
 void BootAnimation::findBootAnimationFile() {
     ATRACE_CALL();
-    const bool playDarkAnim = android::base::GetIntProperty("ro.boot.theme", 0) == 1;
+    android::base::WaitForProperty("ro.persistent_properties.ready", "true",
+                                   std::chrono::seconds(5));
+    const bool playDarkAnim = android::base::GetIntProperty("persist.sys.theme", 2) == 2;
     const std::string productBootanimationFile = PRODUCT_BOOTANIMATION_DIR +
         android::base::GetProperty("ro.product.bootanim.file", playDarkAnim ?
         PRODUCT_BOOTANIMATION_DARK_FILE : PRODUCT_BOOTANIMATION_FILE);
