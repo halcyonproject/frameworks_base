@@ -121,14 +121,7 @@ constructor(
     }
 
     private fun showNewVolumePanel() {
-        activityStarter.dismissKeyguardThenExecute(
-            /* action = */ {
-                volumePanelGlobalStateInteractor.setVisible(true)
-                false
-            },
-            /* cancel = */ {},
-            /* afterKeyguardGone = */ true,
-        )
+        volumePanelGlobalStateInteractor.setVisible(true)
     }
 
     private fun showAppVolumePanel() {
