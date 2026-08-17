@@ -360,15 +360,12 @@ public class PropImitationHooks {
             return;
         }
         String savedProps = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.PIF_DATA);
-        if (savedProps == null || TextUtils.isEmpty(savedProps)) {
-            savedProps = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.FETCHED_PIF);
-        }
 
         if (savedProps == null || TextUtils.isEmpty(savedProps)) {
-            dlog("Parsing props locally - fetched pif / user provided pif unavailable");
+            dlog("Parsing props locally - user provided pif unavailable");
             sCertifiedProps = Arrays.asList(context.getResources().getStringArray(R.array.config_dpsCertBuildProps));
         } else {
-            dlog("Parsing props fetched / provided by user");
+            dlog("Parsing props provided by user");
             try {
                 JSONObject parsedProps = new JSONObject(savedProps);
                 Iterator<String> keys = parsedProps.keys();
