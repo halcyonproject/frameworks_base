@@ -548,7 +548,7 @@ final class UiModeManagerService extends SystemService {
         int mode = Secure.getIntForUser(getContext().getContentResolver(), Secure.UI_NIGHT_MODE,
                 mNightMode.get(), 0);
         if (mode == MODE_NIGHT_AUTO || mode == MODE_NIGHT_CUSTOM) {
-            mode = MODE_NIGHT_YES;
+            mode = mComputedNightMode ? MODE_NIGHT_YES : MODE_NIGHT_NO;
         }
         SystemProperties.set(SYSTEM_PROPERTY_DEVICE_THEME, Integer.toString(mode));
     }
@@ -2457,6 +2457,7 @@ final class UiModeManagerService extends SystemService {
 
         if (mAttentionModeThemeOverlay != MODE_ATTENTION_THEME_OVERLAY_OFF) {
             mComputedNightMode = mAttentionModeThemeOverlay == MODE_ATTENTION_THEME_OVERLAY_NIGHT;
+            updateSystemProperties();
             return;
         }
         if (mNightMode.get() == MODE_NIGHT_YES || mNightMode.get() == UiModeManager.MODE_NIGHT_NO) {
@@ -2464,10 +2465,12 @@ final class UiModeManagerService extends SystemService {
         }
         if (mOverrideNightModeOn && !mComputedNightMode) {
             mComputedNightMode = true;
+            updateSystemProperties();
             return;
         }
         if (mOverrideNightModeOff && mComputedNightMode) {
             mComputedNightMode = false;
+            updateSystemProperties();
             return;
         }
 
@@ -2475,6 +2478,7 @@ final class UiModeManagerService extends SystemService {
                 && mTwilightManager.getLastTwilightState() != null)) {
             resetNightModeOverrideLocked();
         }
+        updateSystemProperties();
     }
 
     private boolean resetNightModeOverrideLocked() {
