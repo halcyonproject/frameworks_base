@@ -23,6 +23,7 @@ import android.app.Application;
 import android.app.TaskStackListener;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Binder;
@@ -120,6 +121,7 @@ public class PropImitationHooks {
 
     private static volatile String sProcessName;
     private static volatile boolean sIsGms, sIsFinsky, sIsPhotos;
+    private static volatile int sGmsUid = -1;
 
     public static void setProps(Context context) {
         final String packageName = context.getPackageName();
@@ -300,17 +302,24 @@ public class PropImitationHooks {
             return false;
         }
 
-        // GMS doesn't have MANAGE_ACTIVITY_TASKS permission
         final int callingUid = Binder.getCallingUid();
-        final int gmsUid;
-        try {
-            gmsUid = context.getPackageManager().getApplicationInfo(PACKAGE_GMS, 0).uid;
-            dlog("shouldBypassTaskPermission: gmsUid:" + gmsUid + " callingUid:" + callingUid);
-        } catch (Exception e) {
-            Log.e(TAG, "shouldBypassTaskPermission: unable to get gms uid", e);
+        if (callingUid < Process.FIRST_APPLICATION_UID) {
             return false;
         }
-        return gmsUid == callingUid;
+
+        if (sGmsUid == -1) {
+            try {
+                sGmsUid = context.getPackageManager().getApplicationInfo(PACKAGE_GMS, 0).uid;
+                dlog("shouldBypassTaskPermission: gmsUid:" + sGmsUid + " callingUid:" + callingUid);
+            } catch (PackageManager.NameNotFoundException e) {
+                // GMS is not installed on vanilla builds, don't spam logcat
+                return false;
+            } catch (Exception e) {
+                Log.e(TAG, "shouldBypassTaskPermission: unable to get gms uid", e);
+                return false;
+            }
+        }
+        return sGmsUid == callingUid;
     }
 
     private static boolean isCallerPlayIntegrity() {
