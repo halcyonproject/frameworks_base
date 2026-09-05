@@ -41,9 +41,12 @@ public final class MkrBinUtils {
      */
     public static void upload(String content, UploadResultCallback callback) {
         getHandler().post(() -> {
+            HttpsURLConnection urlConnection = null;
             try {
                 URL url = new URL(binUrl);
-                HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
+                urlConnection = (HttpsURLConnection) url.openConnection();
+                urlConnection.setConnectTimeout(5000);
+                urlConnection.setReadTimeout(5000);
                 urlConnection.setRequestProperty("Content-Type", "text/plain");
                 urlConnection.setInstanceFollowRedirects(false);
                 urlConnection.setDoOutput(true);
@@ -53,21 +56,28 @@ public final class MkrBinUtils {
                     writer.flush();
                 }
 
+                int responseCode = urlConnection.getResponseCode();
                 String urlPath = "";
-                if (urlConnection.getResponseCode() == HttpsURLConnection.HTTP_MOVED_TEMP) {
+                if (responseCode == HttpsURLConnection.HTTP_MOVED_TEMP
+                        || responseCode == HttpsURLConnection.HTTP_MOVED_PERM
+                        || responseCode == HttpsURLConnection.HTTP_SEE_OTHER) {
                     urlPath = urlConnection.getHeaderField("Location");
                 }
 
-                if (!urlPath.isEmpty()) {
-                    callback.onSuccess(binUrl + urlPath);
+                if (urlPath != null && !urlPath.isEmpty()) {
+                    String fullUrl = urlPath.startsWith("http") ? urlPath : binUrl + urlPath;
+                    callback.onSuccess(fullUrl);
                 } else {
-                    String msg = "Failed to upload to MkrBin: No id retrieved";
+                    String msg = "Failed to upload to MkrBin: HTTP " + responseCode + " (No id retrieved)";
                     callback.onFail(msg, new Exception(msg));
                 }
-                urlConnection.disconnect();
             } catch (Exception e) {
                 String msg = "Failed to upload to MkrBin";
                 callback.onFail(msg, e);
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
             }
         });
     }

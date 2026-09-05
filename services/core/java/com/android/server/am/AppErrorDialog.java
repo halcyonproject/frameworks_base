@@ -230,6 +230,10 @@ final class AppErrorDialog extends BaseErrorDialog implements View.OnClickListen
 
             @Override
             public void onFail(String message, Exception e) {
+                // Fallback: copy raw crash log to clipboard so the log is not lost
+                ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                clipboard.setPrimaryClip(ClipData.newPlainText("Crash Log", mPaste));
+
                 Toast.makeText(getContext(), com.android.internal.R.string.url_copy_failed, Toast.LENGTH_LONG).show();
                 Log.e(TAG, message, e);
             }
