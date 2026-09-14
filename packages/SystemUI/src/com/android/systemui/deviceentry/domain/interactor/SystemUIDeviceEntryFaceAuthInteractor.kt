@@ -124,6 +124,7 @@ constructor(
 
     private val listeners: MutableList<FaceAuthenticationListener> = mutableListOf()
 
+    @Volatile
     private var isDeviceInPocket: Boolean = false
     private var pocketManager: PocketManager? = context.getSystemService(Context.POCKET_SERVICE) as? PocketManager
     private val pocketCallback = object : IPocketCallback.Stub() {
