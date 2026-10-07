@@ -202,6 +202,9 @@ public class PackageCacher implements IPackageCacher {
      */
     @Override
     public ParsedPackage getCachedResult(File packageFile, int flags) {
+        if (mCacheDir == null) {
+            return null;
+        }
         final String cacheKey = getCacheKey(packageFile, flags);
         final File cacheFile = new File(mCacheDir, cacheKey);
 
@@ -253,6 +256,9 @@ public class PackageCacher implements IPackageCacher {
      */
     @Override
     public void cacheResult(File packageFile, int flags, ParsedPackage parsed) {
+        if (mCacheDir == null) {
+            return;
+        }
         try {
             final String cacheKey = getCacheKey(packageFile, flags);
             final File cacheFile = new File(mCacheDir, cacheKey);
@@ -284,6 +290,9 @@ public class PackageCacher implements IPackageCacher {
      * Delete the cache files for the given {@code packageFile}.
      */
     public void cleanCachedResult(@NonNull File packageFile) {
+        if (mCacheDir == null) {
+            return;
+        }
         final String packageName = packageFile.getName();
         final File[] files = FileUtils.listFilesOrEmpty(mCacheDir,
                 (dir, name) -> name.startsWith(packageName));
