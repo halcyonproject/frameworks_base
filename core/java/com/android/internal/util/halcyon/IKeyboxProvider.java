@@ -23,6 +23,15 @@ public interface IKeyboxProvider {
     boolean hasKeybox();
 
     /**
+     * Checks if a valid keybox for the given algorithm ("EC" or "RSA") is available.
+     *
+     * @param algorithm the key algorithm ("EC" or "RSA")
+     * @return true if a valid keybox for the algorithm is available, false otherwise
+     * @hide
+     */
+    boolean hasKeybox(String algorithm);
+
+    /**
      * Retrieves the EC private key.
      *
      * @return the EC private key as a String

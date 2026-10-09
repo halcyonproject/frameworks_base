@@ -136,9 +136,14 @@ public class KeyboxUtils {
 
     public static X509CertificateHolder getCertificateHolder(String algorithm) throws Exception {
         IKeyboxProvider provider = KeyProviderManager.getProvider();
-        String certPem = KeyProperties.KEY_ALGORITHM_EC.equals(algorithm)
-                ? provider.getEcCertificateChain()[0]
-                : provider.getRsaCertificateChain()[0];
+        String[] certChain = KeyProperties.KEY_ALGORITHM_EC.equals(algorithm)
+                ? provider.getEcCertificateChain()
+                : provider.getRsaCertificateChain();
+
+        if (certChain == null || certChain.length == 0) {
+            throw new IllegalArgumentException("No certificate chain found for " + algorithm);
+        }
+        String certPem = certChain[0];
 
         X509Certificate parsedCert = parseCertificate(certPem);
         return new X509CertificateHolder(parsedCert.getEncoded());
