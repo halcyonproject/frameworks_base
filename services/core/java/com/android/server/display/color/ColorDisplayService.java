@@ -406,6 +406,9 @@ public final class ColorDisplayService extends SystemService {
                             case Secure.DISPLAY_COLOR_BALANCE_RED:
                             case Secure.DISPLAY_COLOR_BALANCE_BLUE:
                             case Secure.DISPLAY_COLOR_BALANCE_GREEN:
+                            case Secure.DISPLAY_COLOR_BALANCE_HUE:
+                            case Secure.DISPLAY_COLOR_BALANCE_SATURATION:
+                            case Secure.DISPLAY_COLOR_BALANCE_CONTRAST:
                                 mHandler.sendEmptyMessage(MSG_APPLY_DISPLAY_COLOR_BALANCE);
                                 break;
                         }
@@ -438,6 +441,12 @@ public final class ColorDisplayService extends SystemService {
         cr.registerContentObserver(Secure.getUriFor(Secure.DISPLAY_COLOR_BALANCE_GREEN),
                 false /* notifyForDescendants */, mContentObserver, mCurrentUser);
         cr.registerContentObserver(Secure.getUriFor(Secure.DISPLAY_COLOR_BALANCE_BLUE),
+                false /* notifyForDescendants */, mContentObserver, mCurrentUser);
+        cr.registerContentObserver(Secure.getUriFor(Secure.DISPLAY_COLOR_BALANCE_HUE),
+                false /* notifyForDescendants */, mContentObserver, mCurrentUser);
+        cr.registerContentObserver(Secure.getUriFor(Secure.DISPLAY_COLOR_BALANCE_SATURATION),
+                false /* notifyForDescendants */, mContentObserver, mCurrentUser);
+        cr.registerContentObserver(Secure.getUriFor(Secure.DISPLAY_COLOR_BALANCE_CONTRAST),
                 false /* notifyForDescendants */, mContentObserver, mCurrentUser);
         cr.registerContentObserver(Secure.getUriFor(Secure.DISPLAY_WHITE_BALANCE_ENABLED),
                 false /* notifyForDescendants */, mContentObserver, mCurrentUser);
@@ -1190,7 +1199,8 @@ public final class ColorDisplayService extends SystemService {
 
     private int getColorBalanceChannelInternal(int channel) {
         return Secure.getIntForUser(getContext().getContentResolver(),
-                ColorBalanceTintController.channelToKey(channel), 255, mCurrentUser);
+                ColorBalanceTintController.channelToKey(channel),
+                ColorBalanceTintController.getDefaultValueForChannel(channel), mCurrentUser);
     }
 
     private void dumpInternal(PrintWriter pw) {

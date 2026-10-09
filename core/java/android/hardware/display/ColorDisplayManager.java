@@ -420,11 +420,24 @@ public final class ColorDisplayManager {
         return mManager.setAppSaturationLevel(packageName, saturationLevel);
     }
 
+    /** @hide */
+    public static final int COLOR_BALANCE_CHANNEL_RED = 0;
+    /** @hide */
+    public static final int COLOR_BALANCE_CHANNEL_GREEN = 1;
+    /** @hide */
+    public static final int COLOR_BALANCE_CHANNEL_BLUE = 2;
+    /** @hide */
+    public static final int COLOR_BALANCE_CHANNEL_HUE = 3;
+    /** @hide */
+    public static final int COLOR_BALANCE_CHANNEL_SATURATION = 4;
+    /** @hide */
+    public static final int COLOR_BALANCE_CHANNEL_CONTRAST = 5;
+
     /**
-     * Set the global color balance for a specific RGB channel.
+     * Set the global color balance for a specific channel (RGB, Hue, Saturation, Contrast).
      *
-     * @param channel RGB (0,1,2) channel to change
-     * @param value 0-255 (inclusive), where 255 is default balance
+     * @param channel (0=Red, 1=Green, 2=Blue, 3=Hue, 4=Saturation, 5=Contrast)
+     * @param value channel value
      * @return whether the change was successful
      * @hide
      */
@@ -434,10 +447,10 @@ public final class ColorDisplayManager {
     }
 
     /**
-     * Get the current global color balance for a specific RGB channel.
+     * Get the current global color balance for a specific channel.
      *
-     * @param channel RGB (0,1,2) channel to get the balance of
-     * @return weight of the channel, 0-255 (inclusive) where 255 is the default
+     * @param channel (0=Red, 1=Green, 2=Blue, 3=Hue, 4=Saturation, 5=Contrast)
+     * @return value of the channel
      * @hide
      */
     public int getColorBalanceChannel(int channel) {

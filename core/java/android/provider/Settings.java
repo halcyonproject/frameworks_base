@@ -12550,6 +12550,24 @@ public final class Settings {
         public static final String DISPLAY_COLOR_BALANCE_BLUE = "display_color_balance_blue";
 
         /**
+         * Display color balance for the hue channel, from 0 to 360 (degrees).
+         * @hide
+         */
+        public static final String DISPLAY_COLOR_BALANCE_HUE = "display_color_balance_hue";
+
+        /**
+         * Display color balance for the saturation channel, from 0 to 200 (percent).
+         * @hide
+         */
+        public static final String DISPLAY_COLOR_BALANCE_SATURATION = "display_color_balance_saturation";
+
+        /**
+         * Display color balance for the contrast channel, from 50 to 150 (percent).
+         * @hide
+         */
+        public static final String DISPLAY_COLOR_BALANCE_CONTRAST = "display_color_balance_contrast";
+
+        /**
          * Control whether display white balance is currently enabled.
          * @hide
          */
