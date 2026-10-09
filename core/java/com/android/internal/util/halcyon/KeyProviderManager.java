@@ -37,6 +37,10 @@ public final class KeyProviderManager {
         return getProvider().hasKeybox();
     }
 
+    public static boolean isKeyboxAvailable(String algorithm) {
+        return getProvider().hasKeybox(algorithm);
+    }
+
     private static class DefaultKeyboxProvider implements IKeyboxProvider {
         private final Map<String, String> keyboxData = new HashMap<>();
 
@@ -163,13 +167,17 @@ public final class KeyProviderManager {
 
         @Override
         public boolean hasKeybox() {
-            if (!keyboxData.containsKey("EC.PRIV") || !keyboxData.containsKey("RSA.PRIV")) {
-                return false;
+            return hasKeybox("EC") || hasKeybox("RSA");
+        }
+
+        @Override
+        public boolean hasKeybox(String algorithm) {
+            if ("EC".equalsIgnoreCase(algorithm) || "ecdsa".equalsIgnoreCase(algorithm)) {
+                return keyboxData.containsKey("EC.PRIV") && keyboxData.containsKey("EC.CERT_1");
+            } else if ("RSA".equalsIgnoreCase(algorithm)) {
+                return keyboxData.containsKey("RSA.PRIV") && keyboxData.containsKey("RSA.CERT_1");
             }
-            if (!keyboxData.containsKey("EC.CERT_1") || !keyboxData.containsKey("RSA.CERT_1")) {
-                return false;
-            }
-            return true;
+            return false;
         }
 
         @Override
@@ -194,14 +202,12 @@ public final class KeyProviderManager {
 
         private String[] getCertificateChain(String prefix) {
             List<String> dataList = new ArrayList<>();
-            for (String key : keyboxData.keySet()) {
-                if (key.startsWith(prefix + ".CERT_")) {
-                    dataList.add(keyboxData.get(key));
-                }
+            int i = 1;
+            while (keyboxData.containsKey(prefix + ".CERT_" + i)) {
+                dataList.add(keyboxData.get(prefix + ".CERT_" + i));
+                i++;
             }
-            String[] chain = dataList.toArray(String[]::new);
-            Arrays.sort(chain);
-            return chain;
+            return dataList.toArray(String[]::new);
         }
     }
 }

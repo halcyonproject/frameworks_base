@@ -76,6 +76,12 @@ public class KeyboxImitationHooks {
             return null;
         }
 
+        String algName = (params.algorithm == Algorithm.EC) ? "EC" : "RSA";
+        if (!KeyProviderManager.isKeyboxAvailable(algName)) {
+            dlog("Keybox unavailable for algorithm: " + algName + ", skipping spoofing");
+            return null;
+        }
+
         int uid = Binder.getCallingUid();
         try {
             List<Certificate> chain = KeyboxChainGenerator.generateCertChain(uid, descriptor, params);
