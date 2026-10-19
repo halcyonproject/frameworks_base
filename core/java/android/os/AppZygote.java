@@ -206,6 +206,7 @@ public class AppZygote {
             // use killProcessGroup() here, so we kill all untracked children as well.
             if (!mZygote.isDead()) {
                 Process.killProcessGroup(mZygoteUid, mZygote.getPid());
+                Process.killProcessQuiet(mZygote.getPid());
             }
             mZygote = null;
         }
