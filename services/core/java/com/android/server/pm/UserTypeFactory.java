@@ -139,7 +139,7 @@ public final class UserTypeFactory {
         return new UserTypeDetails.Builder()
                 .setName(USER_TYPE_PROFILE_CLONE)
                 .setBaseType(FLAG_PROFILE)
-                .setMaxAllowed(getDefaultMaxAllowedForSwitchableTypes())
+                .setMaxAllowed(1)
                 .setMaxAllowedPerParent(1)
                 .setProfileParentRequired(true)
                 .setLabels(R.string.profile_label_clone)
