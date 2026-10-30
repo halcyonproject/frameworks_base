@@ -150,8 +150,8 @@ public class AmbientDisplayConfiguration {
 
     /** @hide */
     public boolean tapGestureAmbient(int user) {
-        return boolSettingDefaultOff(Settings.Secure.DOZE_TAP_GESTURE_AMBIENT, user)
-                && tapGestureEnabled(user) && pulseOnNotificationEnabled(user);
+        return boolSettingDefaultOn(Settings.Secure.DOZE_TAP_GESTURE_AMBIENT, user)
+                && tapGestureEnabled(user);
     }
 
     /** @hide */
