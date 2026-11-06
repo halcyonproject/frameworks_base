@@ -3488,7 +3488,16 @@ class Task extends TaskFragment {
         info.topActivity = top != null ? top.mActivityComponent : null;
         info.origActivity = origActivity;
         info.realActivity = realActivity;
-        info.isRealActivityAppLockEnabled = mRealActivityAppLockEnabled;
+        final ComponentName activityComponent = realActivity != null
+                ? realActivity
+                : (origActivity != null ? origActivity : (top != null ? top.mActivityComponent : null));
+        final com.android.server.app.AppLockManagerServiceInternal appLock =
+                mAtmService.getAppLockManagerService();
+        if (appLock != null && activityComponent != null) {
+            info.isRealActivityAppLockEnabled = appLock.requireUnlock(activityComponent.getPackageName(), mUserId);
+        } else {
+            info.isRealActivityAppLockEnabled = mRealActivityAppLockEnabled;
+        }
         info.lastActiveTime = lastActiveTime;
         info.taskDescription = new ActivityManager.TaskDescription(getTaskDescription());
         info.supportsMultiWindow = supportsMultiWindowInDisplayArea(tda);
