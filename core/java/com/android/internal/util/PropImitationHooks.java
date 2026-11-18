@@ -118,28 +118,23 @@ public class PropImitationHooks {
     );
 
     private static final Map<String, Object> propsToChangeLenovoY700 = Map.of(
-        "BRAND", "Lenovo",
-        "MANUFACTURER", "lenovo",
-        "DEVICE", "TB-9707F",
-        "MODEL", "Lenovo TB-9707F"
+        "MODEL", "Lenovo TB-9707F",
+        "MANUFACTURER", "lenovo"
     );
 
     private static final Map<String, Object> propsToChangeOP8P = Map.of(
-        "BRAND", "OnePlus",
-        "MANUFACTURER", "OnePlus",
-        "MODEL", "IN2020"
+        "MODEL", "IN2020",
+        "MANUFACTURER", "OnePlus"
     );
 
     private static final Map<String, Object> propsToChangeOP9P = Map.of(
-        "BRAND", "OnePlus",
-        "MANUFACTURER", "OnePlus",
-        "MODEL", "LE2123"
+        "MODEL", "LE2123",
+        "MANUFACTURER", "OnePlus"
     );
 
     private static final Map<String, Object> propsToChangeMI11TP = Map.of(
-        "BRAND", "Xiaomi",
-        "MANUFACTURER", "Xiaomi",
-        "MODEL", "2107113SI"
+        "MODEL", "2107113SI",
+        "MANUFACTURER", "Xiaomi"
     );
 
     private static final Map<String, Object> propsToChangeMI13P = Map.of(
@@ -149,9 +144,8 @@ public class PropImitationHooks {
     );
 
     private static final Map<String, Object> propsToChangeF5 = Map.of(
-        "BRAND", "Xiaomi",
-        "MANUFACTURER", "Xiaomi",
-        "MODEL", "23049PCD8G"
+        "MODEL", "23049PCD8G",
+        "MANUFACTURER", "Xiaomi"
     );
 
     private static final Map<String, Object> propsToChangeBS4 = Map.of(
