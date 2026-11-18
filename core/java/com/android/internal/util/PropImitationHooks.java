@@ -29,7 +29,6 @@ import android.os.Binder;
 import android.os.Environment;
 import android.os.Process;
 import android.os.SystemProperties;
-import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -184,19 +183,23 @@ public class PropImitationHooks {
             return;
         }
 
-        String savedProps = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.PIF_DATA);
-        if (savedProps == null || TextUtils.isEmpty(savedProps)) {
-            savedProps = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.FETCHED_PIF);
+        if (sCertifiedProps.length == 0) {
+            dlog("Certified props are not set");
+            return;
         }
 
-        if (savedProps == null || TextUtils.isEmpty(savedProps)) {
-            dlog("Parsing props locally - fetched pif / user provided pif unavailable");
+        File dataFile = new File(Environment.getDataSystemDirectory(), DATA_FILE);
+        String savedProps = readFromFile(dataFile);
+
+        if (TextUtils.isEmpty(savedProps)) {
+            Log.d(TAG, "Parsing props locally - data file unavailable");
             sCertifiedProps = Arrays.asList(context.getResources().getStringArray(R.array.config_certifiedBuildProperties));
         } else {
-            dlog("Parsing props fetched / provided by user");
+            Log.d(TAG, "Parsing props fetched by attestation service");
             try {
                 JSONObject parsedProps = new JSONObject(savedProps);
                 Iterator<String> keys = parsedProps.keys();
+
                 while (keys.hasNext()) {
                     String key = keys.next();
                     String value = parsedProps.getString(key);
@@ -204,14 +207,9 @@ public class PropImitationHooks {
                 }
             } catch (JSONException e) {
                 Log.e(TAG, "Error parsing JSON data", e);
-                dlog("Parsing props locally as fallback");
+                Log.d(TAG, "Parsing props locally as fallback");
                 sCertifiedProps = Arrays.asList(context.getResources().getStringArray(R.array.config_certifiedBuildProperties));
             }
-        }
-
-        if (sCertifiedProps.isEmpty()) {
-            dlog("Certified props are not set");
-            return;
         }
 
         final boolean was = isGmsAddAccountActivityOnTop();
@@ -226,14 +224,12 @@ public class PropImitationHooks {
                 }
             }
         };
-
         if (!was) {
             dlog("Spoofing build for GMS");
             setCertifiedProps();
         } else {
             dlog("Skip spoofing build for GMS, because GmsAddAccountActivityOnTop");
         }
-
         try {
             ActivityTaskManager.getService().registerTaskStackListener(taskStackListener);
         } catch (Exception e) {
