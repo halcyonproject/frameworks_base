@@ -14047,13 +14047,6 @@ public final class Settings {
          * @hide
          */
         @Readable
-        public static final String HALCYON_SPOOFED_APPS = "halcyon_spoofed_apps";
-
-        /**
-         * Control whether to hide ADB and Developer settings enable status.
-         * @hide
-         */
-        @Readable
         public static final String HIDE_DEVELOPER_STATUS = "hide_developer_status";
 
         /**
