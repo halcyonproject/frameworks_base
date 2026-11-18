@@ -36,9 +36,6 @@ import com.android.internal.R;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
-/**
- * @hide
- */
 public class PropImitationHooks {
 
     private static final String TAG = "PropImitationHooks";
