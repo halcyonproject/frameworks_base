@@ -13995,13 +13995,6 @@ public final class Settings {
         public static final String BERRY_BLACK_THEME = "berry_black_theme";
 
         /**
-         * User selectable keybox data.
-         * @hide
-         */
-        @Readable
-        public static final String KEYBOX_DATA = "keybox_data";
-
-        /**
          * Network traffic indicator mode
          * 0 = Don't show network traffic indicator
          * 1 = Display up-stream traffic only
