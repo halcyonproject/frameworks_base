@@ -302,34 +302,16 @@ public class PropImitationHooks {
 
     private static void setPropValue(String key, String value) {
         try {
-            dlog("Setting prop " + key + " to " + value);
-            key = key.trim().replace(" ", "_");
+            dlog("Setting prop " + key + " to " + value.toString());
             Class clazz = Build.class;
             if (key.startsWith("VERSION.")) {
                 clazz = Build.VERSION.class;
                 key = key.substring(8);
-            } else {
-                try {
-                    clazz.getDeclaredField(key);
-                } catch (NoSuchFieldException e) {
-                    try {
-                        Build.VERSION.class.getDeclaredField(key);
-                        clazz = Build.VERSION.class;
-                    } catch (NoSuchFieldException ignored) {
-                    }
-                }
             }
             Field field = clazz.getDeclaredField(key);
             field.setAccessible(true);
-            if (field.getType().equals(Integer.TYPE)) {
-                field.set(null, Integer.parseInt(value));
-            } else if (field.getType().equals(Long.TYPE)) {
-                field.set(null, Long.parseLong(value));
-            } else if (field.getType().equals(Boolean.TYPE)) {
-                field.set(null, Boolean.parseBoolean(value));
-            } else {
-                field.set(null, value);
-            }
+            // Cast the value to int if it's an integer field, otherwise string.
+            field.set(null, field.getType().equals(Integer.TYPE) ? Integer.parseInt(value) : value);
             field.setAccessible(false);
         } catch (Exception e) {
             Log.e(TAG, "Failed to set prop " + key, e);
@@ -360,14 +342,12 @@ public class PropImitationHooks {
             dlog("Parsing props fetched / provided by user");
             try {
                 JSONObject parsedProps = new JSONObject(savedProps);
-                List<String> propsList = new ArrayList<>();
                 Iterator<String> keys = parsedProps.keys();
                 while (keys.hasNext()) {
                     String key = keys.next();
                     String value = parsedProps.getString(key);
-                    propsList.add(key + ":" + value);
+                    sCertifiedProps.add(key + ":" + value);
                 }
-                sCertifiedProps = propsList;
             } catch (JSONException e) {
                 Log.e(TAG, "Error parsing JSON data", e);
                 dlog("Parsing props locally as fallback");
