@@ -89,27 +89,22 @@ public class PropImitationHooks {
         }
     }
 
-    private static void setPropValue(String key, String value) {
+    private static void setPropValue(String key, Object value) {
         try {
             dlog("Setting prop " + key + " to " + value.toString());
-            Class clazz = Build.class;
-            if (key.startsWith("VERSION.")) {
-                clazz = Build.VERSION.class;
-                key = key.substring(8);
-            }
-            Field field = clazz.getDeclaredField(key);
+            Field field = Build.class.getDeclaredField(key);
             field.setAccessible(true);
-            // Cast the value to int if it's an integer field, otherwise string.
-            field.set(null, field.getType().equals(Integer.TYPE) ? Integer.parseInt(value) : value);
+            field.set(null, value);
             field.setAccessible(false);
-        } catch (Exception e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             Log.e(TAG, "Failed to set prop " + key, e);
         }
     }
 
     private static void setCertifiedPropsForGms() {
-        if (sCertifiedProps.length == 0) {
-            dlog("Certified props are not set");
+        if (sCertifiedProps.length != 4) {
+            Log.e(TAG, "Insufficient array size for certified props: "
+                    + sCertifiedProps.length + ", required 4");
             return;
         }
         final boolean was = isGmsAddAccountActivityOnTop();
@@ -126,7 +121,10 @@ public class PropImitationHooks {
         };
         if (!was) {
             dlog("Spoofing build for GMS");
-            setCertifiedProps();
+            setPropValue("DEVICE", sCertifiedProps[0]);
+            setPropValue("PRODUCT", sCertifiedProps[1]);
+            setPropValue("MODEL", sCertifiedProps[2]);
+            setPropValue("FINGERPRINT", sCertifiedProps[3]);
         } else {
             dlog("Skip spoofing build for GMS, because GmsAddAccountActivityOnTop");
         }
@@ -134,18 +132,6 @@ public class PropImitationHooks {
             ActivityTaskManager.getService().registerTaskStackListener(taskStackListener);
         } catch (Exception e) {
             Log.e(TAG, "Failed to register task stack listener!", e);
-        }
-    }
-
-    private static void setCertifiedProps() {
-        for (String entry : sCertifiedProps) {
-            // Each entry must be of the format FIELD:value
-            final String[] fieldAndProp = entry.split(":", 2);
-            if (fieldAndProp.length != 2) {
-                Log.e(TAG, "Invalid entry in certified props: " + entry);
-                continue;
-            }
-            setPropValue(fieldAndProp[0], fieldAndProp[1]);
         }
     }
 
