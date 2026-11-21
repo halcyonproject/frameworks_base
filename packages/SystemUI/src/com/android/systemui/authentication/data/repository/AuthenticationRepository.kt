@@ -275,9 +275,16 @@ constructor(
     override val isAutoConfirmFeatureEnabled: StateFlow<Boolean> =
         refreshingFlow(
             initialValue =
-                lockPatternUtils.isAutoPinConfirmEnabled(userRepository.getSelectedUserInfo().id),
-            getFreshValue = lockPatternUtils::isAutoPinConfirmEnabled,
+                isAutoPinConfirmEnabled(userRepository.getSelectedUserInfo().id),
+            getFreshValue = ::isAutoPinConfirmEnabled,
         )
+
+    private fun isAutoPinConfirmEnabled(userId: Int): Boolean {
+        val pinLength = lockPatternUtils.getPinLength(userId)
+        return lockPatternUtils.isAutoPinConfirmEnabled(userId) &&
+            pinLength != LockPatternUtils.PIN_LENGTH_UNAVAILABLE &&
+            pinLength > 0
+    }
 
     override val authenticationMethod: StateFlow<AuthenticationMethodModel> =
         combine(userRepository.selectedUserInfo, mobileConnectionsRepository.isAnySimSecure) {
@@ -407,7 +414,14 @@ constructor(
     }
 
     override suspend fun getPinLength(): Int {
-        return withContext(backgroundDispatcher) { lockPatternUtils.getPinLength(selectedUserId) }
+        return withContext(backgroundDispatcher) {
+            val pinLength = lockPatternUtils.getPinLength(selectedUserId)
+            if (pinLength == LockPatternUtils.PIN_LENGTH_UNAVAILABLE || pinLength < 0) {
+                0
+            } else {
+                pinLength
+            }
+        }
     }
 
     override suspend fun reportAuthenticationAttempt(

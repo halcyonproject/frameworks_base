@@ -3376,6 +3376,14 @@ public class LockSettingsService extends ILockSettings.Stub {
             synchronized (this) {
                 mUserPasswordMetrics.put(userId,  metrics);
             }
+            if (metrics.credType == CREDENTIAL_TYPE_PIN) {
+                synchronized (mSpManager) {
+                    final long protectorId = getCurrentLskfBasedProtectorId(userId);
+                    if (protectorId != SyntheticPasswordManager.NULL_PROTECTOR_ID) {
+                        mSpManager.refreshPinLengthOnDisk(metrics, protectorId, userId);
+                    }
+                }
+            }
         }
         unlockKeystore(userId, sp);
         unlockCeStorage(userId, sp);
@@ -3397,6 +3405,14 @@ public class LockSettingsService extends ILockSettings.Stub {
         if (metrics != null) {
             synchronized (this) {
                 mUserPasswordMetrics.put(userId,  metrics);
+            }
+            if (metrics.credType == CREDENTIAL_TYPE_PIN) {
+                synchronized (mSpManager) {
+                    final long protectorId = getCurrentLskfBasedProtectorId(userId);
+                    if (protectorId != SyntheticPasswordManager.NULL_PROTECTOR_ID) {
+                        mSpManager.refreshPinLengthOnDisk(metrics, protectorId, userId);
+                    }
+                }
             }
         }
 

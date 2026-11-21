@@ -144,12 +144,25 @@ class AuthenticationRepositoryTest : SysuiTestCase() {
         testScope.runTest {
             whenever(lockPatternUtils.isAutoPinConfirmEnabled(USER_INFOS[0].id)).thenReturn(true)
             whenever(lockPatternUtils.isAutoPinConfirmEnabled(USER_INFOS[1].id)).thenReturn(false)
+            whenever(lockPatternUtils.getPinLength(USER_INFOS[0].id)).thenReturn(6)
+            whenever(lockPatternUtils.getPinLength(USER_INFOS[1].id)).thenReturn(6)
 
             val values by collectValues(underTest.isAutoConfirmFeatureEnabled)
             assertThat(values.first()).isFalse()
             assertThat(values.last()).isTrue()
 
             userRepository.setSelectedUserInfo(USER_INFOS[1])
+            assertThat(values.last()).isFalse()
+        }
+
+    @Test
+    fun isAutoConfirmFeatureEnabled_pinLengthUnavailable_returnsFalse() =
+        testScope.runTest {
+            whenever(lockPatternUtils.isAutoPinConfirmEnabled(USER_INFOS[0].id)).thenReturn(true)
+            whenever(lockPatternUtils.getPinLength(USER_INFOS[0].id))
+                .thenReturn(LockPatternUtils.PIN_LENGTH_UNAVAILABLE)
+
+            val values by collectValues(underTest.isAutoConfirmFeatureEnabled)
             assertThat(values.last()).isFalse()
         }
 

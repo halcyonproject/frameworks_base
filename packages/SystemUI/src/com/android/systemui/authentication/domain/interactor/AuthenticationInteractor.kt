@@ -371,6 +371,11 @@ constructor(
             repository.lockoutEndTime != null -> true
             // Auto-confirm attempt when the feature is not enabled; skip the attempt.
             isAutoConfirmAttempt && !isAutoConfirmEnabled.value -> true
+            // Auto-confirm attempt when PIN length is unknown or invalid.
+            isAutoConfirmAttempt &&
+                authenticationMethod == Pin &&
+                (repository.getPinLength() <= 0 ||
+                    repository.getPinLength() == LockPatternUtils.PIN_LENGTH_UNAVAILABLE) -> true
             // The pin is too short; skip only if this is an auto-confirm attempt.
             authenticationMethod == Pin && authenticationMethod.isInputTooShort(inputLength) ->
                 isAutoConfirmAttempt
@@ -384,7 +389,14 @@ constructor(
         return when (this) {
             Pattern -> inputLength < repository.minPatternLength
             Password -> inputLength < repository.minPasswordLength
-            Pin -> inputLength < repository.getPinLength()
+            Pin -> {
+                val pinLength = repository.getPinLength()
+                if (pinLength <= 0 || pinLength == LockPatternUtils.PIN_LENGTH_UNAVAILABLE) {
+                    inputLength < repository.minPasswordLength
+                } else {
+                    inputLength < pinLength
+                }
+            }
             else -> false
         }
     }
