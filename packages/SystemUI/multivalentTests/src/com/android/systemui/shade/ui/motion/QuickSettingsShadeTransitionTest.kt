@@ -119,6 +119,8 @@ class QuickSettingsShadeTransitionTest() : SysuiTestCase() {
             notificationStackScrollView = { notificationScrollView },
             notificationsPlaceholderViewModelFactory =
                 kosmos.notificationsPlaceholderViewModelFactory,
+            nestUiQsStyle = kosmos.nestUiQsStyle,
+            autoBrightnessController = kosmos.autoBrightnessController,
         )
 
     private val goneScene =

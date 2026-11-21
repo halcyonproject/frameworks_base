@@ -39,6 +39,7 @@ import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -58,6 +59,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.window.core.layout.WindowSizeClass
 import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.SceneKey
@@ -72,6 +74,8 @@ import com.android.compose.lifecycle.LaunchedEffectWithLifecycle
 import com.android.compose.modifiers.thenIf
 import com.android.compose.windowsizeclass.LocalWindowSizeClass
 import com.android.internal.jank.InteractionJankMonitor
+import com.android.systemui.brightness.ui.compose.AutoBrightnessController
+import com.android.systemui.brightness.ui.compose.LocalAutoBrightnessController
 import com.android.systemui.common.ui.compose.windowinsets.CutoutLocation
 import com.android.systemui.common.ui.compose.windowinsets.LocalDisplayCutout
 import com.android.systemui.compose.modifiers.sysuiResTag
@@ -84,6 +88,8 @@ import com.android.systemui.notifications.ui.composable.HeadsUpNotificationPlace
 import com.android.systemui.notifications.ui.composable.ScrollingNotificationPanel
 import com.android.systemui.qs.composefragment.ui.GridAnchor
 import com.android.systemui.qs.footer.ui.compose.FooterActionsWithAnimatedVisibility
+import com.android.systemui.qs.panels.style.LocalNestUiQsStyle
+import com.android.systemui.qs.panels.style.NestUiQsStyle
 import com.android.systemui.qs.panels.ui.compose.EditMode
 import com.android.systemui.qs.shared.ui.QuickSettings
 import com.android.systemui.qs.ui.composable.QuickSettingsScene.Companion.InternalScenes.Edit
@@ -118,6 +124,8 @@ constructor(
     private val contentViewModelFactory: QuickSettingsSceneContentViewModel.Factory,
     private val notificationRulesParentViewModelFactory: NotificationRulesParentViewModel.Factory,
     private val jankMonitor: InteractionJankMonitor,
+    private val nestUiQsStyle: NestUiQsStyle,
+    private val autoBrightnessController: AutoBrightnessController,
 ) : ExclusiveActivatable(), Scene {
     override val key = Scenes.QuickSettings
 
@@ -169,19 +177,26 @@ constructor(
 
         LaunchedEffectWithLifecycle(key1 = Unit) { viewModel.detectShadeModeChanges() }
 
-        QuickSettingsScene(
-            notificationStackScrollView = notificationStackScrollView.get(),
-            viewModel = viewModel,
-            headerViewModel = viewModel.qsContainerViewModel.shadeHeaderViewModel,
-            notificationsPlaceholderViewModel = notificationsPlaceholderViewModel,
-            notificationRulesParentViewModel = notificationRulesParentViewModel,
-            modifier =
-                modifier
-                    .graphicsLayer { alpha = contentAlpha }
-                    .thenIf(brightnessMirrorShowing) { Modifier.gesturesDisabled() },
-            shadeSession = shadeSession,
-            jankMonitor = jankMonitor,
-        )
+        val isNestUi by nestUiQsStyle.isNestUi.collectAsStateWithLifecycle()
+
+        CompositionLocalProvider(
+            LocalNestUiQsStyle provides isNestUi,
+            LocalAutoBrightnessController provides autoBrightnessController,
+        ) {
+            QuickSettingsScene(
+                notificationStackScrollView = notificationStackScrollView.get(),
+                viewModel = viewModel,
+                headerViewModel = viewModel.qsContainerViewModel.shadeHeaderViewModel,
+                notificationsPlaceholderViewModel = notificationsPlaceholderViewModel,
+                notificationRulesParentViewModel = notificationRulesParentViewModel,
+                modifier =
+                    modifier
+                        .graphicsLayer { alpha = contentAlpha }
+                        .thenIf(brightnessMirrorShowing) { Modifier.gesturesDisabled() },
+                shadeSession = shadeSession,
+                jankMonitor = jankMonitor,
+            )
+        }
     }
 
     companion object {

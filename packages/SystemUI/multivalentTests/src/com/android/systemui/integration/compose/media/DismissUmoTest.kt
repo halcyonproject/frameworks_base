@@ -15,6 +15,8 @@
  */
 
 package com.android.systemui.media
+import com.android.systemui.brightness.ui.compose.autoBrightnessController
+import com.android.systemui.qs.panels.style.nestUiQsStyle
 
 import android.platform.test.annotations.DisableFlags
 import android.testing.TestableLooper
@@ -99,6 +101,8 @@ class DismissUmoTest : SysuiTestCase() {
             notificationRulesParentViewModelFactory =
                 kosmos.notificationRulesParentViewModelFactory,
             jankMonitor = kosmos.interactionJankMonitor,
+            nestUiQsStyle = kosmos.nestUiQsStyle,
+            autoBrightnessController = kosmos.autoBrightnessController,
         )
 
     private fun Kosmos.runTest(body: suspend TestScope.() -> Unit) =

@@ -15,6 +15,8 @@
  */
 
 package com.android.systemui.shade.ui.composable
+import com.android.systemui.brightness.ui.compose.autoBrightnessController
+import com.android.systemui.qs.panels.style.nestUiQsStyle
 
 import android.platform.test.annotations.DisableFlags
 import android.testing.TestableLooper
@@ -108,6 +110,8 @@ class ShadeSceneTest : SysuiTestCase() {
                         notificationRulesParentViewModelFactory =
                             kosmos.notificationRulesParentViewModelFactory,
                         jankMonitor = interactionJankMonitor,
+                    nestUiQsStyle = nestUiQsStyle,
+                    autoBrightnessController = autoBrightnessController,
                     )
 
                 // Set the single shade content.
@@ -163,6 +167,8 @@ class ShadeSceneTest : SysuiTestCase() {
                     notificationRulesParentViewModelFactory =
                         kosmos.notificationRulesParentViewModelFactory,
                     jankMonitor = interactionJankMonitor,
+                    nestUiQsStyle = nestUiQsStyle,
+                    autoBrightnessController = autoBrightnessController,
                 )
 
             // Set the shade content.

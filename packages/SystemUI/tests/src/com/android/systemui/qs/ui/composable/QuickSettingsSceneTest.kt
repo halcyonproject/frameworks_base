@@ -15,6 +15,8 @@
  */
 
 package com.android.systemui.qs.ui.composable
+import com.android.systemui.brightness.ui.compose.autoBrightnessController
+import com.android.systemui.qs.panels.style.nestUiQsStyle
 
 import android.testing.TestableLooper
 import androidx.compose.runtime.Composable
@@ -97,6 +99,8 @@ class QuickSettingsSceneTest : SysuiTestCase() {
                     notificationRulesParentViewModelFactory =
                         kosmos.notificationRulesParentViewModelFactory,
                     jankMonitor = interactionJankMonitor,
+                    nestUiQsStyle = nestUiQsStyle,
+                    autoBrightnessController = autoBrightnessController,
                 )
 
             composeTestRule.setContent {

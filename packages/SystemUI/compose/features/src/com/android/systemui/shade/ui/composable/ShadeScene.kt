@@ -41,6 +41,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -52,6 +53,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -65,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceAtLeast
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.LowestZIndexContentPicker
@@ -84,6 +87,10 @@ import com.android.compose.modifiers.height
 import com.android.compose.modifiers.padding
 import com.android.compose.modifiers.thenIf
 import com.android.internal.jank.InteractionJankMonitor
+import com.android.systemui.brightness.ui.compose.AutoBrightnessController
+import com.android.systemui.brightness.ui.compose.BrightnessSliderContainer
+import com.android.systemui.brightness.ui.compose.ContainerColors
+import com.android.systemui.brightness.ui.compose.LocalAutoBrightnessController
 import com.android.systemui.common.ui.compose.windowinsets.CutoutLocation
 import com.android.systemui.common.ui.compose.windowinsets.LocalDisplayCutout
 import com.android.systemui.compose.modifiers.sysuiResTag
@@ -98,6 +105,8 @@ import com.android.systemui.notifications.ui.composable.NestedScrollingNotificat
 import com.android.systemui.notifications.ui.composable.ScrollingNotificationPanel
 import com.android.systemui.qs.composefragment.ui.GridAnchor
 import com.android.systemui.qs.footer.ui.compose.FooterActionsWithAnimatedVisibility
+import com.android.systemui.qs.panels.style.LocalNestUiQsStyle
+import com.android.systemui.qs.panels.style.NestUiQsStyle
 import com.android.systemui.qs.panels.ui.compose.EditMode
 import com.android.systemui.qs.panels.ui.compose.QuickQuickSettings
 import com.android.systemui.qs.shared.ui.QuickSettings
@@ -146,6 +155,8 @@ constructor(
     private val notificationsPlaceholderViewModelFactory: NotificationsPlaceholderViewModel.Factory,
     private val notificationRulesParentViewModelFactory: NotificationRulesParentViewModel.Factory,
     private val jankMonitor: InteractionJankMonitor,
+    private val nestUiQsStyle: NestUiQsStyle,
+    private val autoBrightnessController: AutoBrightnessController,
 ) : ExclusiveActivatable(), Scene {
 
     override val key = Scenes.Shade
@@ -189,16 +200,24 @@ constructor(
             }
         val animatedBlurRadiusPx: Float by
             animateFloatAsState(targetValue = targetBlur, label = "Shade-blurRadius")
-        ShadeScene(
-            notificationStackScrollView.get(),
-            viewModel = viewModel,
-            headerViewModel = headerViewModel,
-            notificationsPlaceholderViewModel = notificationsPlaceholderViewModel,
-            notificationRulesParentViewModel = notificationRulesParentViewModel,
-            jankMonitor = jankMonitor,
-            modifier = modifier.blur(with(LocalDensity.current) { animatedBlurRadiusPx.toDp() }),
-            shadeSession = shadeSession,
-        )
+
+        val isNestUi by nestUiQsStyle.isNestUi.collectAsStateWithLifecycle()
+
+        CompositionLocalProvider(
+            LocalNestUiQsStyle provides isNestUi,
+            LocalAutoBrightnessController provides autoBrightnessController,
+        ) {
+            ShadeScene(
+                notificationStackScrollView.get(),
+                viewModel = viewModel,
+                headerViewModel = headerViewModel,
+                notificationsPlaceholderViewModel = notificationsPlaceholderViewModel,
+                notificationRulesParentViewModel = notificationRulesParentViewModel,
+                jankMonitor = jankMonitor,
+                modifier = modifier.blur(with(LocalDensity.current) { animatedBlurRadiusPx.toDp() }),
+                shadeSession = shadeSession,
+            )
+        }
     }
 
     companion object {
@@ -314,14 +333,44 @@ private fun ContentScope.SingleShade(
     val shadeHorizontalPadding =
         dimensionResource(id = R.dimen.notification_panel_margin_horizontal)
 
+    val isNestUi = LocalNestUiQsStyle.current
+    val qsContainerViewModel =
+        rememberViewModel(traceName = "SingleShade.QSContainerViewModel") {
+            viewModel.qsContainerViewModelFactory.create(supportsBrightnessMirroring = true)
+        }
+
+    val brightnessMirrorShowing =
+        isNestUi && qsContainerViewModel.brightnessSliderViewModel.showMirror
+
+    val contentAlpha by
+        animateFloatAsState(
+            targetValue = if (brightnessMirrorShowing) 0f else 1f,
+            label = "alphaAnimationBrightnessMirrorContentHiding",
+        )
+
+    LaunchedEffectWithLifecycle(key1 = Unit) {
+        try {
+            snapshotFlow { contentAlpha }
+                .collect { notificationsPlaceholderViewModel.setAlphaForBrightnessMirror(it) }
+        } finally {
+            notificationsPlaceholderViewModel.setAlphaForBrightnessMirror(1f)
+        }
+    }
+
     Box(
         modifier =
-            modifier.thenIf(onlyPunchHolesInThisScene) {
-                // Render the scene to an offscreen buffer so that BlendMode.DstOut only clears this
-                // scene (and not the one under it). It saves the LS content (e.g. the clock) from
-                // being cut out during the LS -> Shade transition.
-                Modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-            }
+            modifier
+                .graphicsLayer {
+                    alpha = contentAlpha
+                    compositingStrategy = CompositingStrategy.ModulateAlpha
+                }
+                .thenIf(brightnessMirrorShowing) { Modifier.gesturesDisabled() }
+                .thenIf(onlyPunchHolesInThisScene) {
+                    // Render the scene to an offscreen buffer so that BlendMode.DstOut only clears this
+                    // scene (and not the one under it). It saves the LS content (e.g. the clock) from
+                    // being cut out during the LS -> Shade transition.
+                    Modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                }
     ) {
         val scrollState =
             shadeSession.rememberSaveableSession(
@@ -430,6 +479,27 @@ private fun ContentScope.SingleShade(
                         }
                     },
                     mediaInRow = mediaInRow,
+                    brightness =
+                        if (isNestUi && viewModel.isQsEnabled && qsContainerViewModel.isBrightnessSliderVisible) {
+                            @Composable {
+                                Element(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    key = QuickSettings.Elements.BrightnessSlider,
+                                ) {
+                                    BrightnessSliderContainer(
+                                        qsContainerViewModel.brightnessSliderViewModel,
+                                        containerColors =
+                                            ContainerColors(
+                                                Color.Transparent,
+                                                ContainerColors.defaultContainerColor,
+                                            ),
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                }
+                            }
+                        } else {
+                            null
+                        },
                 )
             },
             scrollableScrim = { onContentHeightChanged, isScrimAtRest ->
@@ -480,22 +550,44 @@ private fun MediaAndQqsLayout(
     media: @Composable () -> Unit,
     mediaInRow: Boolean,
     modifier: Modifier = Modifier,
+    brightness: (@Composable () -> Unit)? = null,
 ) {
+    val isNestUi = LocalNestUiQsStyle.current
     val modifierAnimated =
         modifier.animateContentSizeNoClip(MaterialTheme.motionScheme.defaultSpatialSpec())
     if (mediaInRow) {
-        Row(
-            modifier = modifierAnimated,
-            horizontalArrangement = spacedBy(dimensionResource(R.dimen.qs_tile_margin_vertical)),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(modifier = Modifier.weight(1f)) { tiles() }
-            Box(modifier = Modifier.weight(1f)) { media() }
+        if (isNestUi && brightness != null) {
+            Column(
+                modifier = modifierAnimated,
+                verticalArrangement = spacedBy(QuickSettingsShade.Dimensions.VerticalPadding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Row(
+                    horizontalArrangement = spacedBy(QuickSettingsShade.Dimensions.HorizontalPadding),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(modifier = Modifier.weight(1f)) { tiles() }
+                    Box(modifier = Modifier.weight(1f)) { media() }
+                }
+                brightness()
+            }
+        } else {
+            Row(
+                modifier = modifierAnimated,
+                horizontalArrangement = spacedBy(dimensionResource(R.dimen.qs_tile_margin_vertical)),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(modifier = Modifier.weight(1f)) { tiles() }
+                Box(modifier = Modifier.weight(1f)) { media() }
+            }
         }
     } else {
         Column(modifier = modifierAnimated, verticalArrangement = spacedBy(16.dp)) {
             tiles()
             media()
+            if (isNestUi && brightness != null) {
+                brightness()
+            }
         }
     }
 }

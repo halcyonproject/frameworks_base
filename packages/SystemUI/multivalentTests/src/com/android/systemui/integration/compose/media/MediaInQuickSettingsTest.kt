@@ -15,6 +15,8 @@
  */
 
 package com.android.systemui.media
+import com.android.systemui.brightness.ui.compose.autoBrightnessController
+import com.android.systemui.qs.panels.style.nestUiQsStyle
 
 import android.platform.test.annotations.DisableFlags
 import android.platform.test.annotations.EnableFlags
@@ -96,6 +98,8 @@ class MediaInQuickSettingsTest : SysuiTestCase() {
             notificationRulesParentViewModelFactory =
                 kosmos.notificationRulesParentViewModelFactory,
             jankMonitor = kosmos.interactionJankMonitor,
+            nestUiQsStyle = kosmos.nestUiQsStyle,
+            autoBrightnessController = kosmos.autoBrightnessController,
         )
 
     private val overlay =
@@ -106,6 +110,8 @@ class MediaInQuickSettingsTest : SysuiTestCase() {
             notificationStackScrollView = { kosmos.notificationScrollView },
             notificationsPlaceholderViewModelFactory =
                 kosmos.notificationsPlaceholderViewModelFactory,
+            nestUiQsStyle = kosmos.nestUiQsStyle,
+            autoBrightnessController = kosmos.autoBrightnessController,
         )
 
     @Before

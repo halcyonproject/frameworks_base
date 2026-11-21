@@ -15,6 +15,8 @@
  */
 
 package com.android.systemui.shade.ui.motion
+import com.android.systemui.brightness.ui.compose.autoBrightnessController
+import com.android.systemui.qs.panels.style.nestUiQsStyle
 
 import android.platform.test.annotations.DisableFlags
 import android.platform.test.annotations.MotionTest
@@ -106,6 +108,8 @@ class QuickSettingsEditSceneMotionTest : SysuiTestCase() {
             actionsViewModelFactory = kosmos.quickSettingsUserActionsViewModelFactory,
             contentViewModelFactory = kosmos.quickSettingsSceneContentViewModelFactory,
             jankMonitor = kosmos.interactionJankMonitor,
+            nestUiQsStyle = kosmos.nestUiQsStyle,
+            autoBrightnessController = kosmos.autoBrightnessController,
             notificationRulesParentViewModelFactory = kosmos.notificationRulesParentViewModelFactory,
         )
 

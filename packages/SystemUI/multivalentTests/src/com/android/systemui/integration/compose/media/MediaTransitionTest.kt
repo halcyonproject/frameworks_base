@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package com.android.systemui.media
+import com.android.systemui.brightness.ui.compose.autoBrightnessController
+import com.android.systemui.qs.panels.style.nestUiQsStyle
 
 import android.platform.test.annotations.DisableFlags
 import android.testing.TestableLooper
@@ -107,6 +109,8 @@ class MediaTransitionTest : SysuiTestCase() {
             notificationRulesParentViewModelFactory =
                 kosmos.notificationRulesParentViewModelFactory,
             jankMonitor = kosmos.interactionJankMonitor,
+            nestUiQsStyle = kosmos.nestUiQsStyle,
+            autoBrightnessController = kosmos.autoBrightnessController,
         )
 
     private val quickSettingsScene =
@@ -120,6 +124,8 @@ class MediaTransitionTest : SysuiTestCase() {
             notificationRulesParentViewModelFactory =
                 kosmos.notificationRulesParentViewModelFactory,
             jankMonitor = kosmos.interactionJankMonitor,
+            nestUiQsStyle = kosmos.nestUiQsStyle,
+            autoBrightnessController = kosmos.autoBrightnessController,
         )
 
     @Test

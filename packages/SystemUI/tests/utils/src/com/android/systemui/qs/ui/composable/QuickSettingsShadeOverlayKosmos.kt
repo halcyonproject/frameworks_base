@@ -15,7 +15,9 @@
  */
 package com.android.systemui.qs.ui.composable
 
+import com.android.systemui.brightness.ui.compose.autoBrightnessController
 import com.android.systemui.kosmos.Kosmos
+import com.android.systemui.qs.panels.style.nestUiQsStyle
 import com.android.systemui.qs.ui.viewmodel.quickSettingsContainerViewModelFactory
 import com.android.systemui.qs.ui.viewmodel.quickSettingsShadeOverlayActionsViewModelFactory
 import com.android.systemui.qs.ui.viewmodel.quickSettingsShadeOverlayContentViewModelFactory
@@ -30,5 +32,7 @@ val Kosmos.quickSettingsShadeOverlay by
             quickSettingsContainerViewModelFactory = quickSettingsContainerViewModelFactory,
             notificationStackScrollView = { notificationScrollView },
             notificationsPlaceholderViewModelFactory = notificationsPlaceholderViewModelFactory,
+            nestUiQsStyle = nestUiQsStyle,
+            autoBrightnessController = autoBrightnessController,
         )
     }

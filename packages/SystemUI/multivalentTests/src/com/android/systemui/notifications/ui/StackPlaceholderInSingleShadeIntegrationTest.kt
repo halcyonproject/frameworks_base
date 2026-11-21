@@ -15,6 +15,8 @@
  */
 
 package com.android.systemui.notifications.ui
+import com.android.systemui.brightness.ui.compose.autoBrightnessController
+import com.android.systemui.qs.panels.style.nestUiQsStyle
 
 import android.content.res.mainResources
 import android.platform.test.annotations.MotionTest
@@ -313,6 +315,8 @@ class StackPlaceholderInSingleShadeIntegrationTest : SysuiTestCase() {
             notificationRulesParentViewModelFactory =
                 kosmos.notificationRulesParentViewModelFactory,
             jankMonitor = kosmos.interactionJankMonitor,
+            nestUiQsStyle = kosmos.nestUiQsStyle,
+            autoBrightnessController = kosmos.autoBrightnessController,
         )
     }
 }

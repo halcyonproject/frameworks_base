@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Arrangement.spacedBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +43,7 @@ import com.android.systemui.compose.modifiers.sysuiResTag
 import com.android.systemui.media.remedia.ui.compose.Media
 import com.android.systemui.media.remedia.ui.compose.MediaPresentationStyle
 import com.android.systemui.qs.composefragment.ui.GridAnchor
+import com.android.systemui.qs.panels.style.LocalNestUiQsStyle
 import com.android.systemui.qs.panels.ui.compose.TileGrid
 import com.android.systemui.qs.shared.ui.QuickSettings.Elements
 import com.android.systemui.qs.ui.viewmodel.QuickSettingsContainerViewModel
@@ -55,6 +57,7 @@ fun ContentScope.QuickSettingsContent(
     modifier: Modifier = Modifier,
     mediaSquishiness: () -> Float = { 1f },
 ) {
+    val isNestUi = LocalNestUiQsStyle.current
     QuickSettingsPanelLayout(
         brightness =
             @Composable {
@@ -65,7 +68,9 @@ fun ContentScope.QuickSettingsContent(
                             .filterNotNull()
                             .collect { isBrightnessSliderInteractable = it >= .5f }
                     }
-                    Element(modifier = Modifier, key = Elements.BrightnessSlider) {
+                    val brightnessMarginTop =
+                        dimensionResource(id = R.dimen.qs_brightness_margin_top)
+                    Element(modifier = Modifier.fillMaxWidth(), key = Elements.BrightnessSlider) {
                         BrightnessSliderContainer(
                             viewModel.brightnessSliderViewModel,
                             containerColors =
@@ -74,10 +79,10 @@ fun ContentScope.QuickSettingsContent(
                                     ContainerColors.defaultContainerColor,
                                 ),
                             modifier =
-                                Modifier.padding(
-                                        vertical =
-                                            dimensionResource(id = R.dimen.qs_brightness_margin_top)
-                                    )
+                                Modifier.fillMaxWidth()
+                                    .thenIf(!isNestUi) {
+                                        Modifier.padding(vertical = brightnessMarginTop)
+                                    }
                                     .thenIf(!isBrightnessSliderInteractable) {
                                         Modifier.gesturesDisabled()
                                     },
@@ -139,19 +144,25 @@ private fun QuickSettingsPanelLayout(
     mediaInRow: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val isNestUi = LocalNestUiQsStyle.current
     if (mediaInRow) {
         Column(
             verticalArrangement = spacedBy(QuickSettingsShade.Dimensions.VerticalPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = modifier,
         ) {
-            brightness()
+            if (!isNestUi) {
+                brightness()
+            }
             Row(
                 horizontalArrangement = spacedBy(QuickSettingsShade.Dimensions.HorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(modifier = Modifier.weight(1f)) { tiles() }
                 Box(modifier = Modifier.weight(1f)) { media() }
+            }
+            if (isNestUi) {
+                brightness()
             }
         }
     } else {
@@ -160,9 +171,14 @@ private fun QuickSettingsPanelLayout(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = modifier,
         ) {
-            brightness()
+            if (!isNestUi) {
+                brightness()
+            }
             tiles()
             media()
+            if (isNestUi) {
+                brightness()
+            }
         }
     }
 }

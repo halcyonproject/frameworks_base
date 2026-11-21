@@ -41,6 +41,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -80,9 +81,11 @@ import com.android.compose.gesture.gesturesDisabled
 import com.android.compose.lifecycle.DisposableEffectWithLifecycle
 import com.android.compose.lifecycle.LaunchedEffectWithLifecycle
 import com.android.compose.modifiers.thenIf
+import com.android.systemui.brightness.ui.compose.AutoBrightnessController
 import com.android.systemui.brightness.ui.compose.BrightnessSliderContainer
 import com.android.systemui.brightness.ui.compose.BrightnessSliderDimensions
 import com.android.systemui.brightness.ui.compose.ContainerColors
+import com.android.systemui.brightness.ui.compose.LocalAutoBrightnessController
 import com.android.systemui.compose.modifiers.sysuiResTag
 import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.development.ui.compose.BuildNumber
@@ -93,6 +96,8 @@ import com.android.systemui.media.remedia.ui.compose.MediaPresentationStyle
 import com.android.systemui.notifications.ui.composable.SnoozableHeadsUpNotificationPlaceholder
 import com.android.systemui.qs.composefragment.ui.GridAnchor
 import com.android.systemui.qs.flags.QsDetailedView
+import com.android.systemui.qs.panels.style.LocalNestUiQsStyle
+import com.android.systemui.qs.panels.style.NestUiQsStyle
 import com.android.systemui.qs.panels.ui.compose.EditMode
 import com.android.systemui.qs.panels.ui.compose.TileDetails
 import com.android.systemui.qs.panels.ui.compose.TileGrid
@@ -133,6 +138,8 @@ constructor(
     private val quickSettingsContainerViewModelFactory: QuickSettingsContainerViewModel.Factory,
     private val notificationStackScrollView: Lazy<NotificationScrollView>,
     private val notificationsPlaceholderViewModelFactory: NotificationsPlaceholderViewModel.Factory,
+    private val nestUiQsStyle: NestUiQsStyle,
+    private val autoBrightnessController: AutoBrightnessController,
 ) : Overlay {
 
     override val key = Overlays.QuickSettingsShade
@@ -192,52 +199,59 @@ constructor(
 
         LaunchedEffectWithLifecycle(key1 = Unit) { contentViewModel.detectShadeModeChanges() }
 
-        Box(
-            modifier =
-                modifier
-                    .graphicsLayer { alpha = contentAlphaFromBrightnessMirror }
-                    .blur(with(LocalDensity.current) { animatedBlurRadiusPx.toDp() })
-                    .thenIf(showBrightnessMirror) { Modifier.gesturesDisabled() }
+        val isNestUi by nestUiQsStyle.isNestUi.collectAsStateWithLifecycle()
+
+        CompositionLocalProvider(
+            LocalNestUiQsStyle provides isNestUi,
+            LocalAutoBrightnessController provides autoBrightnessController,
         ) {
-            OverlayShade(
-                panelElement = QuickSettingsShade.Elements.Panel,
-                alignmentOnWideScreens = Alignment.End,
-                statusBarHeightPx = contentViewModel.statusBarHeightPx,
-                enableTransparency = contentViewModel.isTransparencyEnabled,
-                onScrimClicked = contentViewModel::onScrimClicked,
-                onBackgroundPlaced = { bounds, topCornerRadius, bottomCornerRadius ->
-                    contentViewModel.onShadeOverlayBoundsChanged(bounds)
-                    contentViewModel.onPanelShapeInWindowChanged(
-                        ShadeScrimShape(
-                            bounds = ShadeScrimBounds(bounds),
-                            topRadius = topCornerRadius.roundToInt(),
-                            bottomRadius = bottomCornerRadius.roundToInt(),
-                        )
-                    )
-                },
-                header = {
-                    if (contentViewModel.showHeader) {
-                        val headerViewModel = quickSettingsContainerViewModel.shadeHeaderViewModel
-                        OverlayShadeHeader(
-                            viewModel = headerViewModel,
-                            notificationsHighlight = headerViewModel.inactiveChipHighlight,
-                            quickSettingsHighlight = ChipHighlightModel.Strong,
-                            showClock = true,
-                            modifier = Modifier.element(QuickSettingsShade.Elements.StatusBar),
-                        )
-                    }
-                },
+            Box(
+                modifier =
+                    modifier
+                        .graphicsLayer { alpha = contentAlphaFromBrightnessMirror }
+                        .blur(with(LocalDensity.current) { animatedBlurRadiusPx.toDp() })
+                        .thenIf(showBrightnessMirror) { Modifier.gesturesDisabled() }
             ) {
-                QuickSettingsContainer(
-                    contentViewModel = contentViewModel,
-                    containerViewModel = quickSettingsContainerViewModel,
+                OverlayShade(
+                    panelElement = QuickSettingsShade.Elements.Panel,
+                    alignmentOnWideScreens = Alignment.End,
+                    statusBarHeightPx = contentViewModel.statusBarHeightPx,
+                    enableTransparency = contentViewModel.isTransparencyEnabled,
+                    onScrimClicked = contentViewModel::onScrimClicked,
+                    onBackgroundPlaced = { bounds, topCornerRadius, bottomCornerRadius ->
+                        contentViewModel.onShadeOverlayBoundsChanged(bounds)
+                        contentViewModel.onPanelShapeInWindowChanged(
+                            ShadeScrimShape(
+                                bounds = ShadeScrimBounds(bounds),
+                                topRadius = topCornerRadius.roundToInt(),
+                                bottomRadius = bottomCornerRadius.roundToInt(),
+                            )
+                        )
+                    },
+                    header = {
+                        if (contentViewModel.showHeader) {
+                            val headerViewModel = quickSettingsContainerViewModel.shadeHeaderViewModel
+                            OverlayShadeHeader(
+                                viewModel = headerViewModel,
+                                notificationsHighlight = headerViewModel.inactiveChipHighlight,
+                                quickSettingsHighlight = ChipHighlightModel.Strong,
+                                showClock = true,
+                                modifier = Modifier.element(QuickSettingsShade.Elements.StatusBar),
+                            )
+                        }
+                    },
+                ) {
+                    QuickSettingsContainer(
+                        contentViewModel = contentViewModel,
+                        containerViewModel = quickSettingsContainerViewModel,
+                    )
+                }
+                SnoozableHeadsUpNotificationPlaceholder(
+                    tag = "QSShadeOverlay",
+                    stackScrollView = notificationStackScrollView.get(),
+                    viewModel = hunPlaceholderViewModel,
                 )
             }
-            SnoozableHeadsUpNotificationPlaceholder(
-                tag = "QSShadeOverlay",
-                stackScrollView = notificationStackScrollView.get(),
-                viewModel = hunPlaceholderViewModel,
-            )
         }
     }
 }
