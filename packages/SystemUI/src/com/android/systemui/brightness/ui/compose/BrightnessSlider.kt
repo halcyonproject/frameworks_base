@@ -27,6 +27,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.horizontalDrag
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -68,11 +71,14 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Dp
@@ -197,6 +203,129 @@ fun BrightnessSlider(
         }
     }
 
+    if (isNestUi) {
+        val currentLayoutDirection = LocalLayoutDirection.current
+        val currentOnDrag by rememberUpdatedState(onDrag)
+        val currentOnStop by rememberUpdatedState(onStop)
+        val rangeSpan = (floatValueRange.endInclusive - floatValueRange.start).coerceAtLeast(1f)
+        val coercedFraction =
+            ((animatedValue - floatValueRange.start) / rangeSpan).coerceIn(0f, 1f)
+
+        fun updateFromPosition(x: Float, widthPx: Int) {
+            if (widthPx <= 0) return
+            val rawFraction = (x / widthPx.toFloat()).coerceIn(0f, 1f)
+            val fraction =
+                if (currentLayoutDirection == LayoutDirection.Rtl) 1f - rawFraction else rawFraction
+            val newFloat = floatValueRange.start + fraction * rangeSpan
+            if (enabled && !overriddenByAppState) {
+                hapticsViewModel.onValueChange(newFloat)
+                value = newFloat.toInt()
+                currentOnDrag(value)
+            }
+        }
+
+        Box(
+            modifier =
+                modifier
+                    .height(48.dp)
+                    .fillMaxWidth()
+                    .sysuiResTag("slider")
+                    .semantics(mergeDescendants = true) {
+                        this.text = AnnotatedString(contentDescription)
+                        setProgress { targetValue ->
+                            if (!enabled || overriddenByAppState) return@setProgress false
+                            val clamped = targetValue.coerceIn(floatValueRange)
+                            value = clamped.toInt()
+                            currentOnDrag(value)
+                            currentOnStop(value)
+                            true
+                        }
+                    }
+                    .sliderPercentage {
+                        (value - valueRange.first).toFloat() /
+                            (valueRange.last - valueRange.first).coerceAtLeast(1)
+                    }
+                    .thenIf(isRestricted) {
+                        Modifier.clickable {
+                            if (restriction is PolicyRestriction.Restricted) {
+                                onRestrictedClick(restriction)
+                            }
+                        }
+                    }
+                    .thenIf(enabled && !overriddenByAppState) {
+                        Modifier.pointerInput(floatValueRange) {
+                            awaitEachGesture {
+                                val down = awaitFirstDown(requireUnconsumed = false)
+                                down.consume()
+                                updateFromPosition(down.position.x, size.width)
+                                val dragFinished =
+                                    horizontalDrag(down.id) { change ->
+                                        change.consume()
+                                        updateFromPosition(change.position.x, size.width)
+                                    }
+                                if (dragFinished) {
+                                    hapticsViewModel.onValueChangeEnded()
+                                    currentOnStop(value)
+                                } else {
+                                    hapticsViewModel.onValueChangeEnded()
+                                    currentOnStop(value)
+                                }
+                            }
+                        }
+                    }
+                    .drawWithContent {
+                        val h = size.height
+                        val w = size.width
+                        val r = h / 2f
+                        val cornerRadius = CornerRadius(r, r)
+
+                        // Inactive track: full pill
+                        drawRoundRect(
+                            color = colors.inactiveTrackColor,
+                            topLeft = Offset.Zero,
+                            size = size,
+                            cornerRadius = cornerRadius,
+                        )
+
+                        // Active track: min fill is circle of diameter h, up to full pill
+                        val fillWidth = h + (w - h) * coercedFraction
+                        val rtl = layoutDirection == LayoutDirection.Rtl
+                        val fillTopLeft =
+                            if (rtl) {
+                                Offset(w - fillWidth, 0f)
+                            } else {
+                                Offset(0f, 0f)
+                            }
+
+                        drawRoundRect(
+                            color = colors.activeTrackColor,
+                            topLeft = fillTopLeft,
+                            size = Size(fillWidth, h),
+                            cornerRadius = cornerRadius,
+                        )
+
+                        // Brightness icon at the start side
+                        val iconW = iconSize.toSize().width
+                        val iconH = iconSize.toSize().height
+                        val iconTopLeftX =
+                            if (rtl) {
+                                w - r - iconW / 2f
+                            } else {
+                                r - iconW / 2f
+                            }
+                        val iconTopLeftY = r - iconH / 2f
+
+                        translate(iconTopLeftX, iconTopLeftY) {
+                            with(painter) {
+                                draw(
+                                    iconSize.toSize(),
+                                    colorFilter = ColorFilter.tint(activeIconColor),
+                                )
+                            }
+                        }
+                    }
+        )
+    } else {
     Slider(
         value = animatedValue,
         valueRange = floatValueRange,
@@ -393,6 +522,7 @@ fun BrightnessSlider(
             }
         },
     )
+    }
 
     val currentShowToast by rememberUpdatedState(showToast)
     // Showing the warning toast if the current running app window has controlled the

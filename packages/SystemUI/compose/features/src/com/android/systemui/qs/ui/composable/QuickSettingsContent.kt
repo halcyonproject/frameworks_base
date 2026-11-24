@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -154,11 +155,22 @@ private fun QuickSettingsPanelLayout(
             if (!isNestUi) {
                 brightness()
             }
+            val maxContentWidth = dimensionResource(id = R.dimen.nestui_qs_max_content_width)
             Row(
                 horizontalArrangement = spacedBy(QuickSettingsShade.Dimensions.HorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(modifier = Modifier.weight(1f)) { tiles() }
+                Box(
+                    contentAlignment = Alignment.CenterStart,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Box(
+                        modifier =
+                            Modifier.thenIf(isNestUi) { Modifier.widthIn(max = maxContentWidth) }
+                    ) {
+                        tiles()
+                    }
+                }
                 Box(modifier = Modifier.weight(1f)) { media() }
             }
             if (isNestUi) {
@@ -166,18 +178,26 @@ private fun QuickSettingsPanelLayout(
             }
         }
     } else {
-        Column(
-            verticalArrangement = spacedBy(QuickSettingsShade.Dimensions.VerticalPadding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier,
+        val maxContentWidth = dimensionResource(id = R.dimen.nestui_qs_max_content_width)
+        Box(
+            contentAlignment = Alignment.TopCenter,
+            modifier = modifier.fillMaxWidth(),
         ) {
-            if (!isNestUi) {
-                brightness()
-            }
-            tiles()
-            media()
-            if (isNestUi) {
-                brightness()
+            Column(
+                verticalArrangement = spacedBy(QuickSettingsShade.Dimensions.VerticalPadding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier =
+                    Modifier.thenIf(isNestUi) { Modifier.widthIn(max = maxContentWidth) }
+                        .fillMaxWidth(),
+            ) {
+                if (!isNestUi) {
+                    brightness()
+                }
+                tiles()
+                media()
+                if (isNestUi) {
+                    brightness()
+                }
             }
         }
     }

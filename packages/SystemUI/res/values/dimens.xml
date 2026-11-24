@@ -707,6 +707,8 @@
     <dimen name="qs_tile_margin_vertical">@dimen/qs_tile_margin_horizontal</dimen>
 
     <!-- NestUI Quick Settings style dimens -->
+    <dimen name="nestui_qs_max_content_width">372dp</dimen>
+    <dimen name="nestui_qs_tile_height">78dp</dimen>
     <dimen name="nestui_qs_tile_margin_horizontal">22dp</dimen>
     <dimen name="nestui_qs_tile_margin_vertical">14dp</dimen>
     <dimen name="nestui_qs_tile_large_end_padding">16dp</dimen>

@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.foundation.verticalScroll
@@ -199,7 +200,15 @@ constructor(
 
         LaunchedEffectWithLifecycle(key1 = Unit) { contentViewModel.detectShadeModeChanges() }
 
-        val isNestUi by nestUiQsStyle.isNestUi.collectAsStateWithLifecycle()
+        val isNestUi = nestUiQsStyle.isNestUi.collectAsStateWithLifecycle().value
+        val isFullWidthShade = LocalSceneContainerPreloadedResources.current.isFullWidthShade
+        val panelWidth =
+            if (isNestUi && !isFullWidthShade) {
+                dimensionResource(R.dimen.nestui_qs_max_content_width) +
+                    QuickSettingsShade.Dimensions.HorizontalPadding * 2
+            } else {
+                OverlayShade.Dimensions.PanelWidth
+            }
 
         CompositionLocalProvider(
             LocalNestUiQsStyle provides isNestUi,
@@ -218,6 +227,7 @@ constructor(
                     statusBarHeightPx = contentViewModel.statusBarHeightPx,
                     enableTransparency = contentViewModel.isTransparencyEnabled,
                     onScrimClicked = contentViewModel::onScrimClicked,
+                    panelWidth = panelWidth,
                     onBackgroundPlaced = { bounds, topCornerRadius, bottomCornerRadius ->
                         contentViewModel.onShadeOverlayBoundsChanged(bounds)
                         contentViewModel.onPanelShapeInWindowChanged(
@@ -365,10 +375,21 @@ private fun ContentScope.QuickSettingsLayout(
     audioDetailsViewModelFactory: AudioDetailsViewModel.Factory,
     modifier: Modifier = Modifier,
 ) {
+    val isNestUi = LocalNestUiQsStyle.current
+    val maxContentWidth = dimensionResource(id = R.dimen.nestui_qs_max_content_width)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.padding(horizontal = QuickSettingsShade.Dimensions.HorizontalPadding),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = QuickSettingsShade.Dimensions.HorizontalPadding),
     ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier =
+                Modifier.thenIf(isNestUi) { Modifier.widthIn(max = maxContentWidth) }
+                    .fillMaxWidth(),
+        ) {
         if (LocalSceneContainerPreloadedResources.current.isFullWidthShade) {
             QuickSettingsOverlayPrivacyChip(qsContainerViewModel.shadeHeaderViewModel)
             VerticalSeparator(QuickSettingsShade.Dimensions.ShortPadding)
@@ -514,7 +535,10 @@ private fun ContentScope.QuickSettingsLayout(
                 )
             }
 
-            VerticalSeparator(QuickSettingsShade.Dimensions.VerticalPadding)
+            VerticalSeparator(
+                if (isNestUi) 24.dp else QuickSettingsShade.Dimensions.VerticalPadding
+            )
+        }
         }
     }
 }

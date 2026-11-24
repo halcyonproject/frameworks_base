@@ -486,7 +486,12 @@ object CommonTileDefaults {
     val TileHeight: Dp
         @Composable
         @ReadOnlyComposable
-        get() = dimensionResource(id = R.dimen.common_tile_default_tile_height)
+        get() =
+            dimensionResource(
+                id =
+                    if (LocalNestUiQsStyle.current) R.dimen.nestui_qs_tile_height
+                    else R.dimen.common_tile_default_tile_height
+            )
 
     val ToggleTargetSize: Dp
         @Composable

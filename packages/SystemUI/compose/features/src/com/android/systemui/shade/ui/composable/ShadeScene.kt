@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.overscroll
@@ -562,11 +563,21 @@ private fun MediaAndQqsLayout(
                 verticalArrangement = spacedBy(QuickSettingsShade.Dimensions.VerticalPadding),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                val maxContentWidth = dimensionResource(id = R.dimen.nestui_qs_max_content_width)
                 Row(
                     horizontalArrangement = spacedBy(QuickSettingsShade.Dimensions.HorizontalPadding),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(modifier = Modifier.weight(1f)) { tiles() }
+                    Box(
+                        contentAlignment = Alignment.CenterStart,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Box(
+                            modifier = Modifier.widthIn(max = maxContentWidth)
+                        ) {
+                            tiles()
+                        }
+                    }
                     Box(modifier = Modifier.weight(1f)) { media() }
                 }
                 brightness()
@@ -582,11 +593,22 @@ private fun MediaAndQqsLayout(
             }
         }
     } else {
-        Column(modifier = modifierAnimated, verticalArrangement = spacedBy(16.dp)) {
-            tiles()
-            media()
-            if (isNestUi && brightness != null) {
-                brightness()
+        val maxContentWidth = dimensionResource(id = R.dimen.nestui_qs_max_content_width)
+        Box(
+            contentAlignment = Alignment.TopCenter,
+            modifier = modifierAnimated.fillMaxWidth(),
+        ) {
+            Column(
+                modifier =
+                    Modifier.thenIf(isNestUi) { Modifier.widthIn(max = maxContentWidth) }
+                        .fillMaxWidth(),
+                verticalArrangement = spacedBy(16.dp),
+            ) {
+                tiles()
+                media()
+                if (isNestUi && brightness != null) {
+                    brightness()
+                }
             }
         }
     }

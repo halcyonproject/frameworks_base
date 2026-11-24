@@ -71,6 +71,7 @@ fun ContentScope.OverlayShade(
     enableTransparency: Boolean,
     onScrimClicked: () -> Unit,
     modifier: Modifier = Modifier,
+    panelWidth: Dp = Dimensions.PanelWidth,
     onBackgroundPlaced: (bounds: Rect, topCornerRadius: Float, bottomCornerRadius: Float) -> Unit =
         { _, _, _ ->
         },
@@ -108,7 +109,7 @@ fun ContentScope.OverlayShade(
                                 label = "OverlayShade",
                             )
                         }
-                        .width(Dimensions.PanelWidth)
+                        .width(panelWidth)
                         // TODO(440566878): Investigate if this can be optimized by replacing with
                         // onLayoutRectChanged.
                         .onPlaced { coordinates ->
