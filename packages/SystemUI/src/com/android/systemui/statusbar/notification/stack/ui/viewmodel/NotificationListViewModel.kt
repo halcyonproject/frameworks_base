@@ -119,14 +119,10 @@ constructor(
                     .distinctUntilChanged(),
                 shadeModeInteractor.shadeMode,
                 notificationStackInteractor.isShowingOnLockscreen,
-            ) { hasNotifications, hasMedia, qsExpandedEnough, shadeMode, isShowingOnLockscreen ->
-                val dualShade = shadeMode is ShadeMode.Dual
+            ) { hasNotifications, _, qsExpandedEnough, shadeMode, isShowingOnLockscreen ->
                 val singleShade = shadeMode is ShadeMode.Single
                 when {
                     hasNotifications -> VisibilityChange.DISAPPEAR_WITH_ANIMATION
-                    // In Dual Shade, media is treated as a notification. Only show the empty shade
-                    // view when both notifications and media are absent.
-                    hasMedia && dualShade -> VisibilityChange.DISAPPEAR_WITH_ANIMATION
                     // Hide the empty shade when QS is close to being full screen (in single shade).
                     // We use this instead of isQsFullscreen to avoid some flickering.
                     qsExpandedEnough && singleShade -> VisibilityChange.DISAPPEAR_WITHOUT_ANIMATION

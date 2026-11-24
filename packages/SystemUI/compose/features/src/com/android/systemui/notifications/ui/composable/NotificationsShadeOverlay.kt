@@ -48,8 +48,6 @@ import com.android.internal.jank.InteractionJankMonitor
 import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.keyguard.ui.composable.elements.LockscreenElements
 import com.android.systemui.lifecycle.rememberViewModel
-import com.android.systemui.media.remedia.ui.compose.Media
-import com.android.systemui.media.remedia.ui.compose.MediaPresentationStyle
 import com.android.systemui.notifications.intelligence.rules.shared.NmContextualDisplayLaunch
 import com.android.systemui.notifications.intelligence.rules.ui.viewmodel.NotificationRulesParentViewModel
 import com.android.systemui.notifications.ui.viewmodel.NotificationsShadeOverlayActionsViewModel
@@ -201,22 +199,6 @@ constructor(
                     isTransparencyEnabled = viewModel.isTransparencyEnabled,
                     stackTopPadding = notificationStackPadding,
                     stackBottomPadding = { notificationStackPadding },
-                    aboveNotifications = { modifier ->
-                        if (viewModel.showMedia) {
-                            Element(
-                                key = Media.Elements.MediaCarousel,
-                                modifier = modifier.padding(horizontal = notificationStackPadding),
-                            ) {
-                                Media(
-                                    viewModelFactory = viewModel.mediaViewModelFactory,
-                                    presentationStyle = MediaPresentationStyle.Default,
-                                    behavior = viewModel.mediaUiBehavior,
-                                    onDismissed = viewModel::onMediaSwipeToDismiss,
-                                    location = Media.Location.SHADE,
-                                )
-                            }
-                        }
-                    },
                     shouldDrawScrimBackground = false,
                     modifier =
                         Modifier.fillMaxWidth().focusProperties {
