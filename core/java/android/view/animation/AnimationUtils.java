@@ -59,26 +59,15 @@ public class AnimationUtils {
     public static final String PROPERTY_PERF_ANIM_OVERRIDE =
             "persist.sys.activity_anim_perf_override";
 
-    private static final class PerfAnimConfig {
-        static final boolean ENABLED;
-
-        static {
-            boolean enabled = false;
-            try {
-                enabled = SystemProperties.getBoolean(PROPERTY_PERF_ANIM_OVERRIDE, false);
-            } catch (Throwable t) {
-                // SystemProperties is not available in every environment (host side tests).
-                // Fall back to the stock, resource backed animations.
-            }
-            ENABLED = enabled;
-        }
-
-        private PerfAnimConfig() {}
-    }
-
     /** @hide **/
     public static boolean isPerfAnimEnabled() {
-        return PerfAnimConfig.ENABLED;
+        try {
+            return SystemProperties.getBoolean(PROPERTY_PERF_ANIM_OVERRIDE, false);
+        } catch (Throwable t) {
+            // SystemProperties is not available in every environment (host side tests).
+            // Fall back to the stock, resource backed animations.
+            return false;
+        }
     }
 
     private static class AnimationState {
