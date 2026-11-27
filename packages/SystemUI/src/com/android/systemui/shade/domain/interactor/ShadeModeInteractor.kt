@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -123,9 +122,9 @@ constructor(
                         Log.d(TAG, "Shade layout is derived from the Dual Shade config")
                         shadeConfigRepository.isFullWidthShade
                     } else {
-                        // Single shade should be shown
-                        Log.d(TAG, "Single shade is always full-width")
-                        flowOf(true)
+                        // Single/Split shade should be shown based on legacy split shade config
+                        Log.d(TAG, "Shade layout is derived from the legacy config")
+                        shadeConfigRepository.legacyUseSplitShade.map { !it }
                     }
                 }
             } else {
@@ -159,8 +158,8 @@ constructor(
         isDualShadeEnabled: Boolean,
         isFullWidthShade: Boolean,
     ): ShadeMode {
-        return if (DualShadeFlag.isEnabled) {
-            if (isDualShadeEnabled) ShadeMode.Dual else ShadeMode.Single
+        return if (DualShadeFlag.isEnabled && isDualShadeEnabled) {
+            ShadeMode.Dual
         } else {
             if (isFullWidthShade) ShadeMode.Single else ShadeMode.Split
         }
