@@ -60,9 +60,14 @@ public class AnimationUtils {
             "persist.sys.activity_anim_perf_override";
 
     /** @hide **/
+    public static final String PROPERTY_LOWEND_DEVICE =
+            "ro.halcyon.device.lowend";
+
+    /** @hide **/
     public static boolean isPerfAnimEnabled() {
         try {
-            return SystemProperties.getBoolean(PROPERTY_PERF_ANIM_OVERRIDE, false);
+            boolean isLowEnd = SystemProperties.getBoolean(PROPERTY_LOWEND_DEVICE, false);
+            return SystemProperties.getBoolean(PROPERTY_PERF_ANIM_OVERRIDE, isLowEnd);
         } catch (Throwable t) {
             // SystemProperties is not available in every environment (host side tests).
             // Fall back to the stock, resource backed animations.
