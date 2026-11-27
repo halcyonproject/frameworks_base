@@ -26,6 +26,7 @@ import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Handler;
 import android.os.Process;
+import android.os.SystemProperties;
 import android.os.Trace;
 import android.tracing.perfetto.InitArguments;
 import android.util.Log;
@@ -53,6 +54,8 @@ import com.android.systemui.dagger.SysUIComponent;
 import com.android.systemui.dump.DumpManager;
 import com.android.systemui.process.ProcessWrapper;
 import com.android.systemui.res.R;
+import com.android.systemui.scene.shared.flag.SceneContainerFlag;
+import com.android.systemui.shade.shared.flag.DualShadeFlag;
 import com.android.systemui.statusbar.phone.ConfigurationForwarder;
 import com.android.systemui.util.NotificationChannels;
 import com.android.wm.shell.dagger.HasWMComponent;
@@ -92,6 +95,16 @@ public class SystemUIApplicationImpl extends SystemUIApplication implements
 
     public SystemUIApplicationImpl() {
         super();
+        boolean isLargeScreen = SystemProperties.getBoolean("ro.halcyon.device.large", false);
+        boolean isLowEnd = SystemProperties.getBoolean("ro.halcyon.device.lowend", false);
+        boolean enableSceneContainer = SystemProperties.getBoolean(
+                "persist.sys.scene_container",
+                SystemProperties.getBoolean("ro.config.scene_container",
+                        isLargeScreen && !isLowEnd));
+        SceneContainerFlag.isEnabledOnVariant = enableSceneContainer;
+        DualShadeFlag.isEnabledOnVariant = SystemProperties.getBoolean(
+                "persist.sys.dual_shade",
+                SystemProperties.getBoolean("ro.config.dual_shade", enableSceneContainer));
         if (!isSubprocess()) {
             // Explicitly initialize a 1MB shmem buffer for Perfetto producers (b/420587648).
             // This increases the Perfetto's shmem buffer from default size (256 KB) to 1MB,

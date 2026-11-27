@@ -37,10 +37,16 @@ object DualShadeFlag {
     //  Remove it and any usages once the bug is fixed.
     val isDesktopDevice = statusBarPopupChips()
 
+    /**
+     * Whether the flag is enabled on the current variant. If this is set to `false`, the value of
+     * the actual aconfig flag doesn't matter and [isEnabled] will always return `false`.
+     */
+    @JvmField var isEnabledOnVariant: Boolean = true
+
     /** Whether the feature is enabled. */
     @JvmStatic
     inline val isEnabled
-        get() = (dualShade() || isDesktopDevice) && SceneContainerFlag.isEnabled
+        get() = (dualShade() || isDesktopDevice) && isEnabledOnVariant && SceneContainerFlag.isEnabled
 
     /**
      * Called to ensure code is only run when the flag is enabled. This protects users from the
